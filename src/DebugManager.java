@@ -1,23 +1,15 @@
 
 public class DebugManager {
-	
+	private static final boolean debug=true;
 	private DebugManager()
 	{
 		
 	}
 	
-	public static DebugManager getInstance()
-	{
-		return InstanceHolder.INSTANCE;
-	}
 	
-	public void alert(Exception e)
+	public static void alert(Exception e)
 	{
-		System.out.println(e.getMessage());
+		if(debug) System.out.println("DebugManager: "+e.getMessage());
 	}
-	s
-	private static class InstanceHolder
-	{
-		private static final DebugManager INSTANCE = new DebugManager();
-	}
+
 }
