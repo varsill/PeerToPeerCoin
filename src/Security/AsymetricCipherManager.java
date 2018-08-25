@@ -27,7 +27,8 @@ import javax.crypto.Cipher;
 public class AsymetricCipherManager {
 	private static final String ALGORITHM_TO_STORE_KEYS = "AES";
 	private static final String ASYMETRIC_ALGORITHM = "RSA";
-	private static final int KEY_LENGTH=2048;//in bits
+	private static final int KEY_LENGTH=4096;//in bits
+	private Cipher cipher;
 	private String password;
 	private KeyPair key_pair=null;
 	private String path_to_file;
@@ -35,9 +36,18 @@ public class AsymetricCipherManager {
 	
 	public AsymetricCipherManager(String password, String path_to_file)
 	{
-		this.password = password;
-		this.path_to_file=path_to_file;
-		getKeys();
+		try
+		{
+			this.cipher = Cipher.getInstance(ASYMETRIC_ALGORITHM);
+			this.password = password;
+			this.path_to_file=path_to_file;
+			getKeys();
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		
 	}
 	
 	
@@ -48,18 +58,17 @@ public class AsymetricCipherManager {
 			KeyGenerator key_generator=new KeyGenerator(KEY_LENGTH, ASYMETRIC_ALGORITHM);
 			if(key_generator==null) return false;
 			key_generator.prepareKeys();
-			while(key_generator.is_ready!=true)
-			{
+			
 				System.out.println("Generating keys");
 				try
 				{
-					Thread.sleep(1000);
+					wait();
 				}
 				catch(Exception e)
 				{
 					DebugManager.alert(e);
 				}
-			}
+				System.out.println("Key has been generated");
 			
 		}
 		if(key_pair==null) return false;
@@ -98,7 +107,7 @@ public class AsymetricCipherManager {
 			 byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
 			buffered_reader.close();
 			if(private_key==null||public_key==null) return false;
-			saveKeysToKeyPair(private_key, public_key);
+			setKeyPair(private_key, public_key);
 
 		}
 		catch(Exception e)
@@ -125,12 +134,12 @@ public class AsymetricCipherManager {
 			DebugManager.alert(e);
 			return false;
 		}
-		saveKeysToKeyPair(private_key, public_key);
+		setKeyPair(private_key, public_key);
 		return true;
 	}
 	
 	
-	private boolean saveKeysToKeyPair(byte[] private_key, byte[] public_key)
+	private boolean setKeyPair(byte[] private_key, byte[] public_key)
 	{
 		try
 		{
@@ -155,6 +164,60 @@ public class AsymetricCipherManager {
 	}
 	
 	
+	public byte[] encrypt(String message)
+	{
+		return encrypt(message.getBytes());
+	}
+	
+	
+	public byte[] encrypt(byte[] message)
+	{
+		try
+		{
+			cipher.init(Cipher.ENCRYPT_MODE, key_pair.getPublic());
+			byte[] result =  cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+		
+	}
+	
+	
+	public byte[] decrypt(String message)
+	{
+		return decrypt(message.getBytes());
+	}
+	
+	
+	public byte[] decrypt(byte[] message)
+	{
+		try
+		{
+			cipher.init(Cipher.DECRYPT_MODE, key_pair.getPrivate());
+			byte[] result = cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	           
+	
+	private byte[] getPublicKey()
+	{
+		return new  X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
+	}
+	
+	private byte[] getPrivateKey()
+	{
+		return new PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
+	}
 	public class KeyGenerator extends Thread
 	{
 		private int key_length=-1;
@@ -212,8 +275,8 @@ public class AsymetricCipherManager {
 				symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
 				
 				
-				byte[] private_key =new  PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
-				byte[] public_key=new X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
+				byte[] private_key =getPrivateKey();
+				byte[] public_key=getPublicKey();
 				
 				private_key = symetric_cipher_manager.encrypt(private_key);
 				public_key = symetric_cipher_manager.encrypt(public_key);
@@ -250,13 +313,14 @@ public class AsymetricCipherManager {
 				key_pair = buildKeys(key_length, algorithm_name);
 				AsymetricCipherManager.this.key_pair = key_pair;
 				is_ready=true;
-				writeKeysToFile(path_to_file, password);
 				AsymetricCipherManager.this.key_pair = this.key_pair;
+				writeKeysToFile(path_to_file, password);
+				notifyAll();
+				
 			}
 			catch (Exception e)
 			{
 				DebugManager.alert(e);
-			
 			}
 		
 		}

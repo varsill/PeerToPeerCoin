@@ -9,7 +9,7 @@ public class Main {
 		try
 		{
 		
-			AsymetricCipherManager manager = new AsymetricCipherManager("haslo", "kluczyk");
+			AsymetricCipherManager manager = new AsymetricCipherManager("hasloa", "kluczyk");
 		
 			
 
