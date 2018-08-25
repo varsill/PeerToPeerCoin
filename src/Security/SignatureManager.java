@@ -36,6 +36,27 @@ public class SignatureManager {
 		return false;
 		
 	}
+	
+	public boolean isSignatureValid(byte[] signature, byte[] message) throws TooLongMessageException, SignatureManagerException
+	{
+		if(hash_manager==null)
+		{
+			throw new SignatureManagerException("HashManager hasn't been properly initialized");	
+		}
+		if(asymetric_cipher_manager==null) 		
+		{
+			throw new SignatureManagerException("AsymetricCipherManager hasn't been properly initialized");
+		}
+		
+		byte[] sent_hash = asymetric_cipher_manager.unsign(signature);
+		byte[] my_hash = hash_manager.digest(message);
+		for(int i=0; i<sent_hash.length; i++)
+		{
+			if(sent_hash[i]!=my_hash[i]) return false;
+		}
+		return true;
+	}
+	
 }
 
 class TooLongMessageException extends Exception

@@ -5,7 +5,7 @@ import java.security.MessageDigest;
 
 import Managers.DebugManager;
 
-public class HashManager extends Thread {
+public class HashManager  {
 	private static final String HASHING_ALGORITHM_NAME = "SHA-256";
 	private MessageDigest message_digest=null;
 	private byte[] result;
@@ -31,25 +31,45 @@ public class HashManager extends Thread {
 	
 	public byte[] digest(byte[] message)
 	{
+		
 		this.message=message;
-		start();
+		DigestiveThread digestive_thread = new DigestiveThread();
+		digestive_thread.start();
+		synchronized(this)
+		{
+			
+		
 		try 
 		{
 			System.out.println("Digesting message");
-			wait();
+			this.wait();
+			System.out.println("Message has been digested");
 		}
+		
 		catch(Exception e)
 		{
 			DebugManager.alert(e);
 		}
-		
+	}
 		return result;
 	}
-	
-	@Override
-	public void run()
+	private class DigestiveThread extends Thread
 	{
-		result = message_digest.digest(message);
-		notify();
+		@Override
+		public void run()
+		{
+			synchronized(HashManager.this)
+			{
+			try
+			{
+				result = message_digest.digest(message);
+				HashManager.this.notifyAll();
+			}
+			catch(Exception e)
+			{
+				DebugManager.alert(e);
+			}
+		}
+	}
 	}
 }

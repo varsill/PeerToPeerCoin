@@ -64,18 +64,19 @@ public class AsymetricCipherManager {
 			KeyGenerator key_generator=new KeyGenerator(KEY_LENGTH, ASYMETRIC_ALGORITHM);
 			if(key_generator==null) return false;
 			key_generator.prepareKeys();
-			
+				synchronized(this)
+				{
 				System.out.println("Generating keys");
 				try
 				{
-					wait();
+					this.wait();
 				}
 				catch(Exception e)
 				{
 					DebugManager.alert(e);
 				}
 				System.out.println("Key has been generated");
-			
+				}
 		}
 		if(key_pair==null) return false;
 		return true;
@@ -390,7 +391,7 @@ public class AsymetricCipherManager {
 		
 		public void prepareKeys()
 		{
-			
+				
 				start();//buildKeys()
 				
 		}
@@ -399,6 +400,10 @@ public class AsymetricCipherManager {
 		@Override
 		public void run()
 		{
+			synchronized(AsymetricCipherManager.this)
+			{
+				
+			
 			try
 			{
 				key_pair = buildKeys(key_length, algorithm_name);
@@ -406,14 +411,14 @@ public class AsymetricCipherManager {
 				is_ready=true;
 				AsymetricCipherManager.this.key_pair = this.key_pair;
 				writeKeysToFile(path_to_file, password);
-				notifyAll();
+				AsymetricCipherManager.this.notify();
 				
 			}
 			catch (Exception e)
 			{
 				DebugManager.alert(e);
 			}
-		
+			}
 		}
 	}
 	

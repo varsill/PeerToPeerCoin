@@ -11,7 +11,12 @@ public class DebugManager {
 	
 	public static void alert(Exception e)
 	{
-		if(debug)System.out.println("DebugManager: "+e.getMessage());
+		if(debug)
+		{
+		//	System.out.println("DebugManager: "+e.getMessage());
+			e.printStackTrace();
+		}
+	
 	}
 	
 }

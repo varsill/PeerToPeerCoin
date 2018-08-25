@@ -9,10 +9,9 @@ public class Main {
 		try
 		{
 		
-			AsymetricCipherManager manager = new AsymetricCipherManager("hasloa", "kluczyk");
+		SignatureManager signature = new SignatureManager("haslo", "kluczyk");
 		
-			
-
+		System.out.println(signature.isSignatureValid(signature.sign("dupa hahahah to ja to pisze xddd".getBytes()), "dupa hahahah toq ja to pisze xddd".getBytes()));
 		}
 		catch(Exception e)
 		{
