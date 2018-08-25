@@ -369,11 +369,11 @@ public class AsymetricCipherManager implements Configurable {
 				byte[] private_key =new  PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
 				byte[] public_key=new X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
 				
-				os = new FileOutputStream(path_to_file+"/private.ks");
+				os = new FileOutputStream(path_to_file+"/private.key");
 				os.write(private_key);
 				os.close();
 				
-				os = new FileOutputStream(path_to_file+"/public.ks");
+				os = new FileOutputStream(path_to_file+"/public.key");
 				os.write(public_key);
 				os.close();
 			}
@@ -400,11 +400,11 @@ public class AsymetricCipherManager implements Configurable {
 				private_key = symetric_cipher_manager.encrypt(private_key);
 				public_key = symetric_cipher_manager.encrypt(public_key);
 				
-				os = new FileOutputStream(path_to_file+"/private.ks");
+				os = new FileOutputStream(path_to_file+"/private.key");
 				os.write(private_key);
 				os.close();
 				
-				os = new FileOutputStream(path_to_file+"/public.ks");
+				os = new FileOutputStream(path_to_file+"/public.key");
 				os.write(public_key);
 				os.close();
 			}
