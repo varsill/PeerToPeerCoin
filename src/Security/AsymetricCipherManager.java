@@ -9,6 +9,7 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.security.Key;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -33,6 +34,11 @@ public class AsymetricCipherManager {
 	private KeyPair key_pair=null;
 	private String path_to_file;
 	
+	public enum KEY_MODE
+	{
+		PUBLIC_KEY_MODE,
+		PRIVATE_KEY_MODE;
+	}
 	
 	public AsymetricCipherManager(String password, String path_to_file)
 	{
@@ -100,12 +106,13 @@ public class AsymetricCipherManager {
 	
 	private boolean getKeysFromFile()
 	{
+		FileInputStream in = null;
 		try
 		{
-			BufferedReader buffered_reader = new BufferedReader(new FileReader(path_to_file));
-			 byte[] private_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
-			 byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
-			buffered_reader.close();
+			File file = new File(path_to_file+"/private.ks");
+			byte[] private_key=Files.readAllBytes(file.toPath());
+			file = new File(path_to_file+"/public.ks");
+			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			setKeyPair(private_key, public_key);
 
@@ -119,7 +126,8 @@ public class AsymetricCipherManager {
 	}
 	
 	
-	private boolean decryptKeys(byte[] private_key, byte[] public_key, String password)
+	
+	public boolean decryptKeys(byte[] private_key, byte[] public_key, String password)
 	{
 		try
 		{
@@ -139,16 +147,40 @@ public class AsymetricCipherManager {
 	}
 	
 	
+	public Key makeKeyFromBytes(byte[] key, KEY_MODE key_mode)
+	{
+		try
+		{
+			KeyFactory kf = KeyFactory.getInstance(ASYMETRIC_ALGORITHM);
+			if(key_mode==KEY_MODE.PRIVATE_KEY_MODE)
+			{
+				PKCS8EncodedKeySpec spec = new PKCS8EncodedKeySpec(key);
+				if(kf==null) return null;
+				return kf.generatePrivate(spec);
+			}
+			else
+			{
+				X509EncodedKeySpec spec = new X509EncodedKeySpec(key);
+				if(kf==null) return null;
+				return kf.generatePublic(spec);
+			}
+			
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+		
+	}
+	
 	private boolean setKeyPair(byte[] private_key, byte[] public_key)
 	{
 		try
 		{
-			 PKCS8EncodedKeySpec private_spec = new PKCS8EncodedKeySpec(private_key);
-			 X509EncodedKeySpec public_spec = new X509EncodedKeySpec(public_key);
-			 KeyFactory kf = KeyFactory.getInstance("RSA");
-			 if(kf==null) return false;
-			 PrivateKey privateKey= kf.generatePrivate(private_spec);
-			 PublicKey publicKey= kf.generatePublic(public_spec);
+			 
+			 PrivateKey privateKey= (PrivateKey) makeKeyFromBytes(private_key, KEY_MODE.PRIVATE_KEY_MODE);
+			 PublicKey publicKey= (PublicKey) makeKeyFromBytes(public_key, KEY_MODE.PUBLIC_KEY_MODE);
 			 if(privateKey==null||publicKey==null) return false;
 			 key_pair = new KeyPair(publicKey, privateKey);
 			 if(key_pair==null) return false;
@@ -186,6 +218,65 @@ public class AsymetricCipherManager {
 		
 	}
 	
+	public byte[] sign(byte[] message)
+	{
+		try
+		{
+			cipher.init(Cipher.ENCRYPT_MODE, key_pair.getPrivate());
+			byte[] result =  cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	
+	public byte[] sign(byte[] message, byte[] private_key)
+	{
+		try
+		{
+			cipher.init(Cipher.ENCRYPT_MODE, makeKeyFromBytes(private_key, KEY_MODE.PRIVATE_KEY_MODE));
+			byte[] result =  cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	
+	public byte[] unsign(byte[] message)
+	{
+		try
+		{
+			cipher.init(Cipher.DECRYPT_MODE, key_pair.getPublic());
+			byte[] result =  cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	
+	public byte[] unsign(byte[] message, byte[] public_key)
+	{
+		try
+		{
+			cipher.init(Cipher.DECRYPT_MODE, makeKeyFromBytes(public_key, KEY_MODE.PUBLIC_KEY_MODE));
+			byte[] result =  cipher.doFinal(message);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
 	
 	public byte[] decrypt(String message)
 	{
