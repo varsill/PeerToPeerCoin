@@ -78,7 +78,7 @@ public class AsymetricCipherManager {
 			file = new File(path_to_file+"/public.ks");
 			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
-			decryptKeys(private_key, public_key, password);
+			return decryptKeys(private_key, public_key, password);
 			
 		}
 		catch(Exception e)
@@ -86,7 +86,6 @@ public class AsymetricCipherManager {
 			DebugManager.alert(e);
 			return false;
 		}
-		return true;
 	}
 	
 	
@@ -118,6 +117,8 @@ public class AsymetricCipherManager {
 			SymetricCipherManager symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
 			private_key=symetric_cipher_manager.decrypt(private_key);
 			public_key=symetric_cipher_manager.decrypt(public_key);
+			if(private_key==null||public_key==null) return false;
+		
 		}
 		catch(Exception e)
 		{
