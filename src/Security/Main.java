@@ -9,8 +9,9 @@ public class Main {
 		try
 		{
 		
-			AsymetricCipherManager manager = new AsymetricCipherManager("dupa", "kluczyk.ks");
-			manager.getKeys();
+			AsymetricCipherManager manager = new AsymetricCipherManager("dupa", "kluczyk");
+		
+			
 
 		}
 		catch(Exception e)

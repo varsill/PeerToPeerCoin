@@ -2,9 +2,13 @@ package Security;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -33,10 +37,11 @@ public class AsymetricCipherManager {
 	{
 		this.password = password;
 		this.path_to_file=path_to_file;
+		getKeys();
 	}
 	
 	
-	public boolean getKeys()
+	private boolean getKeys()
 	{
 		if(!getKeysFromFile(password))
 		{
@@ -65,13 +70,13 @@ public class AsymetricCipherManager {
 	
 	private boolean getKeysFromFile(String password)
 	{
+		FileInputStream in = null;
 		try
 		{
-			BufferedReader buffered_reader = new BufferedReader(new FileReader(path_to_file));
-			if(buffered_reader==null) return false;
-			byte[] private_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
-			byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
-			buffered_reader.close();
+			File file = new File(path_to_file+"/private.ks");
+			byte[] private_key=Files.readAllBytes(file.toPath());
+			file = new File(path_to_file+"/public.ks");
+			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			decryptKeys(private_key, public_key, password);
 			
@@ -94,7 +99,7 @@ public class AsymetricCipherManager {
 			 byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
 			buffered_reader.close();
 			if(private_key==null||public_key==null) return false;
-			saveKeys(private_key, public_key);
+			saveKeysToKeyPair(private_key, public_key);
 
 		}
 		catch(Exception e)
@@ -119,12 +124,12 @@ public class AsymetricCipherManager {
 			DebugManager.alert(e);
 			return false;
 		}
-		saveKeys(private_key, public_key);
+		saveKeysToKeyPair(private_key, public_key);
 		return true;
 	}
 	
 	
-	private boolean saveKeys(byte[] private_key, byte[] public_key)
+	private boolean saveKeysToKeyPair(byte[] private_key, byte[] public_key)
 	{
 		try
 		{
@@ -173,37 +178,58 @@ public class AsymetricCipherManager {
 		
 		private void writeKeysToFile(String path_to_file)//without encryption
 		{
-			PrintWriter print_writer=null;
+			
+			FileOutputStream os = null;
 			try
 			{
-				print_writer = new PrintWriter(path_to_file, "UTF-8");
-				print_writer.println(key_pair.getPublic());
-				print_writer.println(key_pair.getPrivate());
+
+				byte[] private_key =new  PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
+				byte[] public_key=new X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
+				
+				os = new FileOutputStream(path_to_file+"/private.ks");
+				os.write(private_key);
+				os.close();
+				
+				os = new FileOutputStream(path_to_file+"/public.ks");
+				os.write(public_key);
+				os.close();
 			}
 			catch (Exception e)
 			{
 				DebugManager.alert(e);
 			}
-			if(print_writer!=null)print_writer.close();
+			
 					
 		}
 		
 		private void writeKeysToFile(String path_to_file, String password)//with symetric encryption based on AES
 		{
 			SymetricCipherManager symetric_cipher_manager=null; 
-			PrintWriter print_writer=null;
+			FileOutputStream os = null;
 			try
 			{
 				symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
-				print_writer = new PrintWriter(path_to_file, "UTF-8");
-				print_writer.println(key_pair.getPublic());
-				print_writer.println(key_pair.getPrivate());
+				
+				
+				byte[] private_key =new  PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
+				byte[] public_key=new X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
+				
+				private_key = symetric_cipher_manager.encrypt(private_key);
+				public_key = symetric_cipher_manager.encrypt(public_key);
+				
+				os = new FileOutputStream(path_to_file+"/private.ks");
+				os.write(private_key);
+				os.close();
+				
+				os = new FileOutputStream(path_to_file+"/public.ks");
+				os.write(public_key);
+				os.close();
 			}
 			catch (Exception e)
 			{
 				DebugManager.alert(e);
 			}
-			if(print_writer!=null)print_writer.close();
+			
 					
 		}
 		
@@ -221,6 +247,7 @@ public class AsymetricCipherManager {
 			try
 			{
 				key_pair = buildKeys(key_length, algorithm_name);
+				AsymetricCipherManager.this.key_pair = key_pair;
 				is_ready=true;
 				writeKeysToFile(path_to_file, password);
 				AsymetricCipherManager.this.key_pair = this.key_pair;
