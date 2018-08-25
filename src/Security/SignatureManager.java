@@ -1,12 +1,14 @@
 package Security;
 
-public class SignatureManager {
+import Interfaces.Configurable;
+
+public class SignatureManager  {
 	private AsymetricCipherManager asymetric_cipher_manager=null;
 	private HashManager hash_manager=null;
 	
-	public SignatureManager(String password, String path_to_file)
+	public SignatureManager()
 	{
-		asymetric_cipher_manager = new AsymetricCipherManager(password, path_to_file);
+		asymetric_cipher_manager = new AsymetricCipherManager();
 		hash_manager = new HashManager();
 	}
 	

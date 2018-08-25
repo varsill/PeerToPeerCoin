@@ -18,21 +18,27 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Properties;
+
 import Managers.DebugManager;
 import javax.crypto.Cipher;
+
+import Interfaces.Configurable;
+import Interfaces.PropertiesManager;
 
 
 @SuppressWarnings("unused")
 
 
-public class AsymetricCipherManager {
-	private static final String ALGORITHM_TO_STORE_KEYS = "AES";
-	private static final String ASYMETRIC_ALGORITHM = "RSA";
-	private static final int KEY_LENGTH=4096;//in bits
+public class AsymetricCipherManager implements Configurable {
+	private static String ALGORITHM_TO_STORE_KEYS;// = "AES";
+	private static String ASYMETRIC_ALGORITHM;// = "RSA";
+	private static int KEY_LENGTH;//=4096;//in bits
+	private String PATH_TO_FILE;
 	private Cipher cipher;
 	private String password;
 	private KeyPair key_pair=null;
-	private String path_to_file;
+	
 	
 	public enum KEY_MODE
 	{
@@ -40,13 +46,34 @@ public class AsymetricCipherManager {
 		PRIVATE_KEY_MODE;
 	}
 	
-	public AsymetricCipherManager(String password, String path_to_file)
+
+	@Override
+	public void configure()
 	{
+		Properties properties = new Properties();
 		try
 		{
+			properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
+			ALGORITHM_TO_STORE_KEYS = properties.getProperty("ALGORITHM_TO_STORE_KEYS");
+			ASYMETRIC_ALGORITHM = properties.getProperty("ASYMETRIC_ALGORITHM");
+			PATH_TO_FILE = properties.getProperty("PATH_TO_FILE");
+			KEY_LENGTH = Integer.parseInt(properties.getProperty("KEY_LENGTH"));
+			
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+	}
+	
+	public AsymetricCipherManager()
+	{
+		configure();
+		try
+		{
+			
 			this.cipher = Cipher.getInstance(ASYMETRIC_ALGORITHM);
-			this.password = password;
-			this.path_to_file=path_to_file;
+			this.password = PropertiesManager.PASSWORD;
 			getKeys();
 		}
 		catch(Exception e)
@@ -89,9 +116,9 @@ public class AsymetricCipherManager {
 		FileInputStream in = null;
 		try
 		{
-			File file = new File(path_to_file+"/private.ks");
+			File file = new File(PATH_TO_FILE+"/private.ks");
 			byte[] private_key=Files.readAllBytes(file.toPath());
-			file = new File(path_to_file+"/public.ks");
+			file = new File(PATH_TO_FILE+"/public.ks");
 			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			return decryptKeys(private_key, public_key, password);
@@ -110,9 +137,9 @@ public class AsymetricCipherManager {
 		FileInputStream in = null;
 		try
 		{
-			File file = new File(path_to_file+"/private.ks");
+			File file = new File(PATH_TO_FILE+"/private.ks");
 			byte[] private_key=Files.readAllBytes(file.toPath());
-			file = new File(path_to_file+"/public.ks");
+			file = new File(PATH_TO_FILE+"/public.ks");
 			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			setKeyPair(private_key, public_key);
@@ -410,7 +437,7 @@ public class AsymetricCipherManager {
 				AsymetricCipherManager.this.key_pair = key_pair;
 				is_ready=true;
 				AsymetricCipherManager.this.key_pair = this.key_pair;
-				writeKeysToFile(path_to_file, password);
+				writeKeysToFile(PATH_TO_FILE, password);
 				AsymetricCipherManager.this.notify();
 				
 			}

@@ -1,21 +1,44 @@
 package Security;
 
+import java.io.FileInputStream;
+import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.util.Properties;
 
+import Interfaces.Configurable;
+import Interfaces.PropertiesManager;
 import Managers.DebugManager;
 
-public class HashManager  {
-	private static final String HASHING_ALGORITHM_NAME = "SHA-256";
+public class HashManager implements Configurable {
+	private static String HASHING_ALGORITHM_NAME;//="SHA-256"
 	private MessageDigest message_digest=null;
 	private byte[] result;
 	private byte[] message;
 	
 	
+	@Override
+	public void configure()
+	{
+		Properties properties = new Properties();
+		try
+		{
+			properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
+			HASHING_ALGORITHM_NAME = properties.getProperty("HASHING_ALGORITHM_NAME");
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		
+		
+		
+	}
 	public HashManager()
 	{
 		try
 		{
+			configure();
 			message_digest=MessageDigest.getInstance(HASHING_ALGORITHM_NAME);
 		}
 		catch(Exception e)
