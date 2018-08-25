@@ -23,7 +23,8 @@ public class SignatureManager {
 	{
 		if(hash_manager==null)
 		{
-			throw new SignatureManagerException("HashManager hasn't been properly initialized");		}
+			throw new SignatureManagerException("HashManager hasn't been properly initialized");	
+		}
 		if(asymetric_cipher_manager==null) 		
 		{
 			throw new SignatureManagerException("AsymetricCipherManager hasn't been properly initialized");
