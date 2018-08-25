@@ -55,15 +55,15 @@ public class SymetricCipherManager {
 		this.key_length=key_length;
 	}
 	
-	public byte[] encrypt(String input)
+	public byte[] encrypt(byte[] input)
 	{
 		
 		try
 		{
-			byte[] input_bytes=input.getBytes(StandardCharsets.UTF_8);
+			
 			this.cipher = Cipher.getInstance(algorithm_name);
-			this.cispher.init(Cipher.ENCRYPT_MODE, this.key_spec);
-			byte[] output =  this.cipher.doFinal(input_bytes);
+			this.cipher.init(Cipher.ENCRYPT_MODE, this.key_spec);
+			byte[] output =  this.cipher.doFinal(input);
 			return output;
 		}
 		catch (Exception e)

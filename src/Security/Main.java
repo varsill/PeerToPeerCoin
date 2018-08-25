@@ -8,18 +8,12 @@ public class Main {
 	{
 		try
 		{
-		//	byte[] encryptionKey = "dupa".getBytes(StandardCharsets.UTF_8);
-		//	byte[] plainText = "Zuzia to suka".getBytes(StandardCharsets.UTF_8);
-			SymetricCipherManager advancedEncryptionStandard = new SymetricCipherManager("AES","dupaaa");
-			byte[] cipherText = advancedEncryptionStandard.encrypt("Zuzia to suka");
-			byte[] decryptedCipherText = advancedEncryptionStandard.decrypt(cipherText);
+		
+			AsymetricCipherManager manager = new AsymetricCipherManager("dupa", "kluczyk.ks");
+			manager.getKeys();
 
-			System.out.println(new String("Zuzia to suka"));
-			System.out.println(new String(cipherText));
-			System.out.println(new String(decryptedCipherText));
-			
-
-		}catch(Exception e)
+		}
+		catch(Exception e)
 		{
 			
 		}

@@ -1,25 +1,161 @@
 package Security;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.PrintWriter;
+import java.nio.charset.StandardCharsets;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import Managers.DebugManager;
 import javax.crypto.Cipher;
 
-@SuppressWarnings("unused")
-public class AsymetricCipherManager {
 
+@SuppressWarnings("unused")
+
+
+public class AsymetricCipherManager {
+	private static final String ALGORITHM_TO_STORE_KEYS = "AES";
+	private static final String ASYMETRIC_ALGORITHM = "RSA";
+	private static final int KEY_LENGTH=2048;//in bits
+	private String password;
+	private KeyPair key_pair=null;
+	private String path_to_file;
+	
+	
+	public AsymetricCipherManager(String password, String path_to_file)
+	{
+		this.password = password;
+		this.path_to_file=path_to_file;
+	}
+	
+	
+	public boolean getKeys()
+	{
+		if(!getKeysFromFile(password))
+		{
+			KeyGenerator key_generator=new KeyGenerator(KEY_LENGTH, ASYMETRIC_ALGORITHM);
+			if(key_generator==null) return false;
+			key_generator.prepareKeys();
+			while(key_generator.is_ready!=true)
+			{
+				System.out.println("Generating keys");
+				try
+				{
+					Thread.sleep(1000);
+				}
+				catch(Exception e)
+				{
+					DebugManager.alert(e);
+				}
+			}
+			
+		}
+		if(key_pair==null) return false;
+		return true;
+		
+	}
+	
+	
+	private boolean getKeysFromFile(String password)
+	{
+		try
+		{
+			BufferedReader buffered_reader = new BufferedReader(new FileReader(path_to_file));
+			if(buffered_reader==null) return false;
+			byte[] private_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
+			byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
+			buffered_reader.close();
+			if(private_key==null||public_key==null) return false;
+			decryptKeys(private_key, public_key, password);
+			
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return false;
+		}
+		return true;
+	}
+	
+	
+	private boolean getKeysFromFile()
+	{
+		try
+		{
+			BufferedReader buffered_reader = new BufferedReader(new FileReader(path_to_file));
+			 byte[] private_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
+			 byte[] public_key = buffered_reader.readLine().getBytes(StandardCharsets.UTF_8);
+			buffered_reader.close();
+			if(private_key==null||public_key==null) return false;
+			saveKeys(private_key, public_key);
+
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return false;
+		}
+		return true;
+	}
+	
+	
+	private boolean decryptKeys(byte[] private_key, byte[] public_key, String password)
+	{
+		try
+		{
+			SymetricCipherManager symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
+			private_key=symetric_cipher_manager.decrypt(private_key);
+			public_key=symetric_cipher_manager.decrypt(public_key);
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return false;
+		}
+		saveKeys(private_key, public_key);
+		return true;
+	}
+	
+	
+	private boolean saveKeys(byte[] private_key, byte[] public_key)
+	{
+		try
+		{
+			 PKCS8EncodedKeySpec private_spec = new PKCS8EncodedKeySpec(private_key);
+			 X509EncodedKeySpec public_spec = new X509EncodedKeySpec(public_key);
+			 KeyFactory kf = KeyFactory.getInstance("RSA");
+			 if(kf==null) return false;
+			 PrivateKey privateKey= kf.generatePrivate(private_spec);
+			 PublicKey publicKey= kf.generatePublic(public_spec);
+			 if(privateKey==null||publicKey==null) return false;
+			 key_pair = new KeyPair(publicKey, privateKey);
+			 if(key_pair==null) return false;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return false;
+		}
+		
+		return true;
+		
+	}
+	
+	
 	public class KeyGenerator extends Thread
 	{
 		private int key_length=-1;
 		private boolean is_ready=false;
 		private String algorithm_name = "";
 		private KeyPair key_pair;
-		private String path_to_file;
+		
 		public KeyGenerator(int key_length, String algorithm_name)
 		{
 			this.key_length=key_length;
@@ -35,7 +171,7 @@ public class AsymetricCipherManager {
 		}
 		
 		
-		private void writeKeysToFile(String path_to_file)//with symetric encryption
+		private void writeKeysToFile(String path_to_file)//without encryption
 		{
 			PrintWriter print_writer=null;
 			try
@@ -52,11 +188,13 @@ public class AsymetricCipherManager {
 					
 		}
 		
-		private void writeKeysToFile(String path_to_file, String password)//with symetric encryption
+		private void writeKeysToFile(String path_to_file, String password)//with symetric encryption based on AES
 		{
+			SymetricCipherManager symetric_cipher_manager=null; 
 			PrintWriter print_writer=null;
 			try
 			{
+				symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
 				print_writer = new PrintWriter(path_to_file, "UTF-8");
 				print_writer.println(key_pair.getPublic());
 				print_writer.println(key_pair.getPrivate());
@@ -73,7 +211,6 @@ public class AsymetricCipherManager {
 		{
 			
 				start();//buildKeys()
-				writeKeysToFile(path_to_file);
 				
 		}
 		
@@ -85,6 +222,8 @@ public class AsymetricCipherManager {
 			{
 				key_pair = buildKeys(key_length, algorithm_name);
 				is_ready=true;
+				writeKeysToFile(path_to_file, password);
+				AsymetricCipherManager.this.key_pair = this.key_pair;
 			}
 			catch (Exception e)
 			{
@@ -96,5 +235,4 @@ public class AsymetricCipherManager {
 	}
 	
 
-	
 }
