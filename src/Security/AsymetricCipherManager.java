@@ -20,11 +20,11 @@ import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Properties;
 
+import Managers.Configurable;
 import Managers.DebugManager;
-import javax.crypto.Cipher;
+import Managers.PropertiesManager;
 
-import Interfaces.Configurable;
-import Interfaces.PropertiesManager;
+import javax.crypto.Cipher;
 
 
 @SuppressWarnings("unused")
@@ -116,9 +116,9 @@ public class AsymetricCipherManager implements Configurable {
 		FileInputStream in = null;
 		try
 		{
-			File file = new File(PATH_TO_FILE+"/private.ks");
+			File file = new File(PATH_TO_FILE+"/private.key");
 			byte[] private_key=Files.readAllBytes(file.toPath());
-			file = new File(PATH_TO_FILE+"/public.ks");
+			file = new File(PATH_TO_FILE+"/public.key");
 			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			return decryptKeys(private_key, public_key, password);
@@ -137,9 +137,9 @@ public class AsymetricCipherManager implements Configurable {
 		FileInputStream in = null;
 		try
 		{
-			File file = new File(PATH_TO_FILE+"/private.ks");
+			File file = new File(PATH_TO_FILE+"/private.key");
 			byte[] private_key=Files.readAllBytes(file.toPath());
-			file = new File(PATH_TO_FILE+"/public.ks");
+			file = new File(PATH_TO_FILE+"/public.key");
 			byte[] public_key=Files.readAllBytes(file.toPath());
 			if(private_key==null||public_key==null) return false;
 			setKeyPair(private_key, public_key);

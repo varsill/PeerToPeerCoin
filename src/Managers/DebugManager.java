@@ -1,7 +1,5 @@
 package Managers;
 
-import Interfaces.PropertiesManager;
-
 public class DebugManager {
 	
 	private static boolean debug=PropertiesManager.DEBUG;

@@ -1,6 +1,6 @@
 package Security;
 
-import Interfaces.Configurable;
+import Managers.Configurable;
 
 public class SignatureManager  {
 	private AsymetricCipherManager asymetric_cipher_manager=null;

@@ -6,9 +6,9 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.Properties;
 
-import Interfaces.Configurable;
-import Interfaces.PropertiesManager;
+import Managers.Configurable;
 import Managers.DebugManager;
+import Managers.PropertiesManager;
 
 public class HashManager implements Configurable {
 	private static String HASHING_ALGORITHM_NAME;//="SHA-256"
@@ -61,12 +61,9 @@ public class HashManager implements Configurable {
 		synchronized(this)
 		{
 			
-		
 		try 
 		{
-			System.out.println("Digesting message");
 			this.wait();
-			System.out.println("Message has been digested");
 		}
 		
 		catch(Exception e)

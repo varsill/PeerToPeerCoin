@@ -1,4 +1,4 @@
-package Interfaces;
+package Managers;
 
 public class PropertiesManager {
 		static public String PATH_TO_PROPERTIES_FILE = "configuration/properties.conf";
