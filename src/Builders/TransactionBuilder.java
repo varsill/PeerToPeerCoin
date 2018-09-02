@@ -1,17 +1,26 @@
 package Builders;
+import java.util.List;
+
 import Blockchain.Transaction;
 import Main.ProgramHandler;
 public class TransactionBuilder implements Builder {
 
 	Transaction transaction = null;
 	ProgramHandler program_handler = null;
+	List <PayeeInformation> payees_information=null;
+	static double total_amount = 0;
 	
 	//Singleton
-	private TransactionBuilder() {}
+	private TransactionBuilder()
+	{
+		payees_information = new  List<PayeeInformation>();
+	}
 	
 	
 	public static TransactionBuilder getInstance()
 	{
+		
+		total_amount = 0;
 		return SingletonHolder.INSTANCE;
 	}
 	
@@ -39,6 +48,20 @@ public class TransactionBuilder implements Builder {
 		return transaction;
 	}
 	
+	
+	public void addInformationAboutPayment(String public_key, double amount)
+	{
+		payees_information.add(new PayeeInformation(public_key, amount));
+		total_amount+=amount;
+	}
+	
+	
+	//Greedy algorithm!
+	private prepareAvailableTransactionsToMatchTotalAmount()
+	{
+		PriorityQueue<AvailableTransaction> program_handler.getAvailableTransactions();\
+		
+	}
 	
 	
 	
