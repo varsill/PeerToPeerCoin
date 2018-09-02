@@ -2,23 +2,53 @@ package Blockchain;
 
 import java.io.Serializable;
 
+import Managers.DebugManager;
+import Security.HashManager;
 import Security.SignatureManager;
 
-public class Parcel implements Serializable{
+public class Parcel implements Serializable
+{
+	
 	
 	private static final long serialVersionUID = 1L;
-	private String name = "";
-	private String hash = "";
-	private String signature="";
-	private SignatureManager signature_manager = null;
+	protected String hash = "";
+	protected String signature="";
+	protected String public_key = "";
+	protected SignatureManager signature_manager = null;
+	protected HashManager hash_manager=null;
 	
-	public void sign()
+	
+	protected boolean sign()
 	{
 		signature_manager = new SignatureManager();
+		try
+		{
+			this.signature = new String(signature_manager.sign(createString().getBytes()));
+		}catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		
 	}
 	
-	public String createString()
+	
+	protected String createString()
 	{
-		return name+hash+signature;
+		return public_key+signature;
 	}
+	
+	
+	protected void makeHash()
+	{
+		hash_manager = new HashManager();
+		this.hash= new String(hash_manager.digest(createString().getBytes()));
+	}
+	
+	
+	public String getSignature()
+	{
+		return signature;
+	}
+	
+	
 }

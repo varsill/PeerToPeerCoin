@@ -61,7 +61,7 @@ public class SignatureManager  {
 	
 }
 
-class TooLongMessageException extends Exception
+ class TooLongMessageException extends Exception
 {
 	  
 	private static final long serialVersionUID = 1L;

@@ -1,9 +1,10 @@
-package Security;
+package Main;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 import Managers.PropertiesManager;
+import Security.HashManager;
 
 public class Main {
 	private static HashManager hm;
