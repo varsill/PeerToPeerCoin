@@ -2,8 +2,8 @@ package Blockchain;
 
 import java.io.Serializable;
 
-public class Transaction implements Serializable {
+public class Transaction extends Parcel {
 	
-	private static final long serialVersionUID = 1L;
+
  
 }

@@ -49,7 +49,7 @@ public class Block implements Serializable
 		result=String.valueOf(this.ID)+String.valueOf(this.difficulty)+this.previous_hash;
 		for(int i=0; i<list_of_parcels.size(); i++)
 		{
-			result = result+list_of_parcels.get(i).toString();
+			result = result+list_of_parcels.get(i).createString();
 		}
 		return result;
 	}
@@ -106,7 +106,7 @@ public class Block implements Serializable
 	}
 	
 	
-	public boolean isHashProper(String hash)
+	private boolean isHashProper(String hash)
 	{
 		byte[] array_of_hashs_bytes = hash.getBytes();
 		int number_of_full_bytes = difficulty/8;
@@ -134,4 +134,20 @@ public class Block implements Serializable
 	}
 	
 	
+	public List<Transaction> getTransactions()
+	{
+		
+	}
+	
+	
+	public List<Entry> getEntries()
+	{
+		
+	}
+	
+	
+	public List<Exit> getExits()
+	{
+		
+	}
 }
