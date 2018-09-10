@@ -27,8 +27,9 @@ public class Parcel implements Serializable
 		}catch(Exception e)
 		{
 			DebugManager.alert(e);
+			return false;
 		}
-		
+		return true;
 	}
 	
 	
@@ -50,5 +51,21 @@ public class Parcel implements Serializable
 		return signature;
 	}
 	
+	
+	public boolean isSignatureValid()
+	{
+		signature_manager = new SignatureManager();
+		try
+		{
+			String signature = new String(signature_manager.sign(createString().getBytes()));
+			if(signature.equals(this.signature)) return true;
+			else return false;
+		}catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return false;
+		}
+		
+	}
 	
 }

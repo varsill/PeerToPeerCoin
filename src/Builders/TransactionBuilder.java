@@ -1,10 +1,13 @@
 package Builders;
+import java.util.ArrayList;
 import java.util.List;
 
 import Blockchain.Transaction;
 import Main.ProgramHandler;
-public class TransactionBuilder implements Builder {
 
+import Blockchain.PayeeInformation;
+public class TransactionBuilder implements Builder {
+	
 	Transaction transaction = null;
 	ProgramHandler program_handler = null;
 	List <PayeeInformation> payees_information=null;
@@ -13,7 +16,7 @@ public class TransactionBuilder implements Builder {
 	//Singleton
 	private TransactionBuilder()
 	{
-		payees_information = new  List<PayeeInformation>();
+		payees_information = new ArrayList<PayeeInformation>();
 	}
 	
 	
@@ -59,7 +62,7 @@ public class TransactionBuilder implements Builder {
 	//Greedy algorithm!
 	private prepareAvailableTransactionsToMatchTotalAmount()
 	{
-		PriorityQueue<AvailableTransaction> program_handler.getAvailableTransactions();\
+		PriorityQueue<AvailableTransaction> program_handler.getAvailableTransactions();
 		
 	}
 	

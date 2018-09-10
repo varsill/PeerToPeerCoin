@@ -1,9 +1,13 @@
 package Blockchain;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import Managers.DebugManager;
 import Security.HashManager;
 
 public class Block implements Serializable
@@ -21,13 +25,22 @@ public class Block implements Serializable
 	private HashManager hash_manager;
 	
 	
-	
+	public int getID()
+	{
+		return this.ID;
+	}
 	public Block(int ID, int difficulty, String previous_hash)
 	{
 		this.ID = ID;
 		this.difficulty = difficulty;
 		this.previous_hash = previous_hash;
 		this.list_of_parcels=new ArrayList<Parcel>();
+	}
+	
+	
+	public String getPreviousHash()
+	{
+		return previous_hash;
 	}
 	
 	
@@ -134,20 +147,10 @@ public class Block implements Serializable
 	}
 	
 	
-	public List<Transaction> getTransactions()
+	public List<Parcel> getParcels()
 	{
 		
 	}
 	
 	
-	public List<Entry> getEntries()
-	{
-		
-	}
-	
-	
-	public List<Exit> getExits()
-	{
-		
-	}
 }
