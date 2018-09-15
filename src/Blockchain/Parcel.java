@@ -1,29 +1,36 @@
 package Blockchain;
 
-import java.io.Serializable;
+
+import java.nio.charset.StandardCharsets;
+
+import javax.xml.bind.DatatypeConverter;
 
 import Managers.DebugManager;
 import Security.HashManager;
 import Security.SignatureManager;
 
-public class Parcel implements Serializable
+public class Parcel implements  Cloneable
 {
 	
 	
-	private static final long serialVersionUID = 1L;
-	protected String hash = "";
-	protected String signature="";
-	protected String public_key = "";
+	protected String public_key = null;
 	protected SignatureManager signature_manager = null;
 	protected HashManager hash_manager=null;
-	
-	
-	protected boolean sign()
+	protected long time=-1;
+	protected String signature=null;
+	public Parcel()
 	{
-		signature_manager = new SignatureManager();
+		
+	}
+	
+	
+	public boolean sign()
+	{
+		this.time = System.currentTimeMillis();
 		try
 		{
-			this.signature = new String(signature_manager.sign(createString().getBytes()));
+			String s = createString();
+			this.signature = SignatureManager.sign(s);
 		}catch(Exception e)
 		{
 			DebugManager.alert(e);
@@ -32,34 +39,38 @@ public class Parcel implements Serializable
 		return true;
 	}
 	
+	public void setPublicKey(String public_key)
+	{
+		this.public_key=public_key;
+	}
+	
 	
 	protected String createString()
 	{
-		return public_key+signature;
+		return public_key+Long.toString(time);
 	}
 	
-	
-	protected void makeHash()
-	{
-		hash_manager = new HashManager();
-		this.hash= new String(hash_manager.digest(createString().getBytes()));
-	}
-	
+
 	
 	public String getSignature()
 	{
 		return signature;
 	}
 	
+	public String getHash()
+	{
+		HashManager hash_manager = new HashManager();
+		return new String(hash_manager.digest(createString()));
+	}
+
 	
 	public boolean isSignatureValid()
 	{
-		signature_manager = new SignatureManager();
+
 		try
 		{
-			String signature = new String(signature_manager.sign(createString().getBytes()));
-			if(signature.equals(this.signature)) return true;
-			else return false;
+			String s = createString();
+			return SignatureManager.verify(this.signature, s, public_key);
 		}catch(Exception e)
 		{
 			DebugManager.alert(e);
@@ -67,5 +78,6 @@ public class Parcel implements Serializable
 		}
 		
 	}
+	
 	
 }

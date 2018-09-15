@@ -1,19 +1,26 @@
 package Builders;
 
+import Managers.Configurable;
+
 public interface Builder {
 	
-	public void createPart();
+	 public Object createPart() throws Exception;
 	
+	 public void loadPartFromString(String s) throws Exception;
 	
+	 public void reset();
+
+	 public boolean isReady();
+
+	 public void prepareNew();
 }
+
 
  class BuildingFailedException extends Exception
 {
 	 
-	 
-	private String class_name = "";
 	private static final long serialVersionUID = 1L;
-	
+	private String class_name = "";
 	
 	public BuildingFailedException(String class_name)
 	{

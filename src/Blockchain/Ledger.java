@@ -1,4 +1,4 @@
-package Blockchain;
+ package Blockchain;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -22,14 +22,14 @@ public class Ledger implements Configurable {
 	private ArrayList<Block> list_of_blocks = null; 
 	private String path_to_blockchain="";
 	private ActivePeersRegister active_peers_register = null;
-	private UnspentTransactionsRegister unspent_transactions_register = null;
+	private BalanceRegister balance_register = null;
 	//Singleton
 	
 			private Ledger() 
 			{
 				list_of_blocks = new ArrayList<Block>();
 				active_peers_register = ActivePeersRegister.getInstance();
-				unspent_transactions_register = UnspentTransactionsRegister.getInstance();
+				balance_register = BalanceRegister.getInstance();
 				configure();
 			}
 			

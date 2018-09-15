@@ -16,8 +16,11 @@ import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
+import java.util.Base64;
 import java.util.Properties;
 
 import Managers.Configurable;
@@ -46,6 +49,56 @@ public class AsymetricCipherManager implements Configurable {
 		PRIVATE_KEY_MODE;
 	}
 	
+	//Singleton
+
+	private AsymetricCipherManager()
+	{
+		configure();
+		try
+		{
+			
+			this.cipher = Cipher.getInstance(ASYMETRIC_ALGORITHM);
+			this.password = PropertiesManager.PASSWORD;
+			getKeys();
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		
+	}
+	
+	private AsymetricCipherManager(String public_key, String private_key)
+	{
+		configure();
+		setKeyPair(public_key.getBytes(), private_key.getBytes());
+		{
+			try
+			{
+				
+				this.cipher = Cipher.getInstance(ASYMETRIC_ALGORITHM);
+				this.password = PropertiesManager.PASSWORD;
+				getKeys();
+			}
+			catch(Exception e)
+			{
+				DebugManager.alert(e);
+			}
+		}
+	}
+	
+	
+	static public AsymetricCipherManager getInstance()
+	{
+		return SingletonHolder.INSTANCE;
+	}
+	
+	static private class SingletonHolder
+	{
+		private static AsymetricCipherManager INSTANCE = new AsymetricCipherManager();
+	}
+	
+	//REST
 
 	@Override
 	public void configure()
@@ -64,23 +117,6 @@ public class AsymetricCipherManager implements Configurable {
 		{
 			DebugManager.alert(e);
 		}
-	}
-	
-	public AsymetricCipherManager()
-	{
-		configure();
-		try
-		{
-			
-			this.cipher = Cipher.getInstance(ASYMETRIC_ALGORITHM);
-			this.password = PropertiesManager.PASSWORD;
-			getKeys();
-		}
-		catch(Exception e)
-		{
-			DebugManager.alert(e);
-		}
-		
 	}
 	
 	
@@ -202,6 +238,31 @@ public class AsymetricCipherManager implements Configurable {
 		
 	}
 	
+	
+	public Key makeKeyFromString(String key, KEY_MODE key_mode)
+	{
+		try
+		{
+			KeyFactory kf = KeyFactory.getInstance(ASYMETRIC_ALGORITHM);
+			if(key_mode==KEY_MODE.PRIVATE_KEY_MODE)
+			{
+				return loadPrivateKey(key);
+			}
+			else
+			{
+				return loadPublicKey(key);
+			}
+			
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+		
+	}
+	
+	
 	private boolean setKeyPair(byte[] private_key, byte[] public_key)
 	{
 		try
@@ -291,6 +352,39 @@ public class AsymetricCipherManager implements Configurable {
 		}
 	}
 	
+	public byte[] unsign(String message, String public_key)
+	{
+		try
+		{
+			byte[] msg = {0, 2, 12, };
+			cipher.init(Cipher.DECRYPT_MODE, makeKeyFromString(public_key, KEY_MODE.PUBLIC_KEY_MODE));
+			byte[] result =  cipher.doFinal(msg);
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	
+	
+	public byte[] unsign(String message)
+	{
+		try
+		{
+			cipher.init(Cipher.DECRYPT_MODE, key_pair.getPublic());
+			byte[] result =  cipher.doFinal(message.getBytes());
+			return result;
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+			return null;
+		}
+	}
+	
+	
 	public byte[] unsign(byte[] message, byte[] public_key)
 	{
 		try
@@ -305,6 +399,7 @@ public class AsymetricCipherManager implements Configurable {
 			return null;
 		}
 	}
+	
 	
 	public byte[] decrypt(String message)
 	{
@@ -328,15 +423,78 @@ public class AsymetricCipherManager implements Configurable {
 	}
 	           
 	
-	private byte[] getPublicKey()
+	
+	
+	
+	public String getPublicKeyAsString() 
+	{
+		
+		try
+		{
+			return savePublicKey(this.key_pair.getPublic());
+		}catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		return null;
+	}
+	
+	
+
+	private String savePublicKey(PublicKey publ) throws Exception 
+	{
+    
+	KeyFactory fact = KeyFactory.getInstance(ASYMETRIC_ALGORITHM);
+    X509EncodedKeySpec spec = fact.getKeySpec(publ,
+            X509EncodedKeySpec.class);
+    return Base64.getEncoder().encodeToString(spec.getEncoded());
+	}
+	
+	
+
+	
+	
+	
+	
+	public static PrivateKey loadPrivateKey(String key64) throws Exception {
+	    byte[] clear = Base64.getDecoder().decode(key64);
+	    PKCS8EncodedKeySpec keySpec = new PKCS8EncodedKeySpec(clear);
+	    KeyFactory fact = KeyFactory.getInstance(keySpec.getFormat());
+	    PrivateKey priv = fact.generatePrivate(keySpec);
+	    Arrays.fill(clear, (byte) 0);
+	    return priv;
+	}
+
+
+	public static PublicKey loadPublicKey(String key64) throws Exception {
+	    byte[] data = Base64.getDecoder().decode(key64);
+	    X509EncodedKeySpec spec = new X509EncodedKeySpec(data);
+	    KeyFactory fact = KeyFactory.getInstance(ASYMETRIC_ALGORITHM);
+	    return fact.generatePublic(spec);
+	}
+	
+	private byte[] getPrivateKeyAsByte()
+	{
+		return new PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
+	}
+	
+	
+	private byte[] getPublicKeyAsByte()
 	{
 		return new  X509EncodedKeySpec(key_pair.getPublic().getEncoded()).getEncoded();
 	}
 	
-	private byte[] getPrivateKey()
+	public PrivateKey getPrivateKey()
 	{
-		return new PKCS8EncodedKeySpec(key_pair.getPrivate().getEncoded()).getEncoded();
+		return this.key_pair.getPrivate();
 	}
+	
+	public PublicKey getPublicKey()
+	{
+		return this.key_pair.getPublic();
+	}
+	
+	
 	public class KeyGenerator extends Thread
 	{
 		private int key_length=-1;
@@ -394,8 +552,8 @@ public class AsymetricCipherManager implements Configurable {
 				symetric_cipher_manager = new SymetricCipherManager(ALGORITHM_TO_STORE_KEYS, password);
 				
 				
-				byte[] private_key =getPrivateKey();
-				byte[] public_key=getPublicKey();
+				byte[] private_key =getPrivateKeyAsByte();
+				byte[] public_key=getPublicKeyAsByte();
 				
 				private_key = symetric_cipher_manager.encrypt(private_key);
 				public_key = symetric_cipher_manager.encrypt(public_key);

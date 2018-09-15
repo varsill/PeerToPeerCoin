@@ -4,53 +4,45 @@ import java.util.List;
 
 import Managers.DebugManager;
 
-public class Transaction extends Parcel {
+public class Transaction extends Parcel implements XSerializable {
 	
-	
-private List<String> available_transactions_hashes = null;
-private List<PayeeInformation> payees_information_list = null; 
+
+protected List<PayInformation> payees_list = null; 
+protected PayInformation payer = null;
 
 
-public void addTransaction(String hash)
+public Transaction()
 {
-	available_transactions_hashes.add(hash);
-}
-
-
-public void addPayeeInformation(String payee_public_key, double amount)
-{
-	payees_information_list.add(new PayeeInformation(payee_public_key, amount));
-}
-
-
-public boolean build()
-{
-	makeHash();
-	if(hash=="") return false;
-	if(!sign()) return false;
-	return true;
-}
-
-
-protected boolean sign()
-{
-	super.sign();
-	try
-	{
-		signature_manager.sign(createString().getBytes());
-	}catch(Exception e)
-	{
-		DebugManager.alert(e);
-		return false;
-	}
-	return true;
 	
 }
 
-
-protected void makeHash()
+public Transaction(Transaction t)
 {
-	super.makeHash();//ciekawe czy odpali createString st¹d czy z Parcel
+	this.payees_list=t.payees_list;
+	this.payer=t.payer;
+	this.public_key=t.public_key;
+	this.signature=t.signature;
+	this.time=t.time;
+}
+
+public Transaction(PayInformation payer)
+{
+	this.payer = payer;
+}
+
+
+public void addPayer(String public_key, double amount)
+{
+	payer = new PayInformation(public_key, amount);
+	this.public_key=public_key;
+	this.time=System.currentTimeMillis();
+}
+
+
+public void addPayee(String payee_public_key, double amount)
+{
+	if(amount<0) return;
+	payees_list.add(new PayInformation(payee_public_key, amount));
 }
 
 
@@ -58,19 +50,50 @@ protected String createString()
 {
 	String result = super.createString();
 	
-	for(int i=0; i<available_transactions_hashes.size(); i++)
-	{
-			result+=available_transactions_hashes.get(i);
-	}
 	
-	for(int i=0; i<payees_information_list.size(); i++)
+	for(int i=0; i<payees_list.size(); i++)
 	{
-			result+=payees_information_list.get(i).getPublicKey()+payees_information_list.get(i).getAmount();
+			result+=payees_list.get(i).getPublicKey()+Double.toString(payees_list.get(i).getAmount());
 	}
 	
 	return result;
 }
 
+public List<PayInformation> getPayees()
+{
+	if(payees_list!=null) return payees_list;
+	return null;
+}
+
+public PayInformation getPayer()
+{
+	return payer;
+}
+
+@Override
+public String[] getListOfObjectNames() {
+	String[] s= {"public_key", "time", "signature"};
+	return s;
+}
+
+@Override
+public void addChildToList(Object object) {
+	// TODO Auto-generated method stub
+	
+}
+
+@Override
+public XSerializable[] getObjectList() {
+
+	XSerializable[] list = new XSerializable[payees_list.size()];
+	int i=0;
+	for(PayInformation p:payees_list)
+	{
+		list[i]=(XSerializable)p;
+		i++;
+	}
+	return list;
+}
 
 }
 
