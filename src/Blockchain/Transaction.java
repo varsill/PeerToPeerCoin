@@ -76,11 +76,6 @@ public String[] getListOfObjectNames() {
 	return s;
 }
 
-@Override
-public void addChildToList(Object object) {
-	// TODO Auto-generated method stub
-	
-}
 
 @Override
 public XSerializable[] getObjectList() {

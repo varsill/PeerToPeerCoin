@@ -102,6 +102,12 @@ public class Block implements XSerializable
 	}
 	
 	
+	public String getHash()
+	{
+		if(hash_manager==null) hash_manager = new HashManager();
+		return new String(hash_manager.digest(createString()));
+	}
+	
 	public void proof()
 	{
 	
@@ -167,28 +173,53 @@ public class Block implements XSerializable
 		return this.list_of_parcels;
 	}
 	
-	protected void setMerkleRoot()
+	public List<Transaction> getTransactions()
 	{
-	/*	ArrayList<String> list_of_hashes = new ArrayList<String>();
-		ArrayList<String> new_list_of_hashes = new ArrayList<String>();
+		ArrayList<Transaction> transactions = new ArrayList<Transaction>();
 		for(Parcel p: list_of_parcels)
 		{
-			list_of_hashes.add(p.getHash());
-		}
-		
-		while(list_of_hashes.size()!=1)
-		{
-			for(int i=0; i<list_of_hashes.size()/2; i++)
+			if(p.getClass().equals(Transaction.class))
 			{
-				new_list_of_hashes.add(new String(digest((list_of_hashes.get(2*i)+list_of_hashes.get(2*i+1)))));
+				transactions.add((Transaction)p);
 			}
-			if(list_of_hashes.size()%2==1) new_list_of_hashes.add(list_of_hashes.get(list_of_hashes.size()-1));
-			list_of_hashes=(ArrayList<String>) new_list_of_hashes.clone();
-			new_list_of_hashes.clear();
 		}
 		
-		merkle_root=list_of_hashes.get(0);
-		*/
+		return transactions;
+	}
+	
+	
+	public List<Entry> getEntries()
+	{
+		ArrayList<Entry> entries = new ArrayList<Entry>();
+		for(Parcel p: list_of_parcels)
+		{
+			if(p.getClass().equals(Entry.class))
+			{
+				entries.add((Entry)p);
+			}
+		}
+		
+		return entries;
+	}
+	
+	
+	public List<Exits> getExits()
+	{
+		ArrayList<Exit> exits = new ArrayList<Exit>();
+		for(Parcel p: list_of_parcels)
+		{
+			if(p.getClass().equals(Exit.class))
+			{
+				exits.add((Exit)p);
+			}
+		}
+		
+		return exits;
+	}
+	
+	
+	protected void setMerkleRoot()
+	{
 		
 		String s_trans = "";
 		String s_entries="";
@@ -219,11 +250,6 @@ public class Block implements XSerializable
 		return s;
 	}
 
-	@Override
-	public void addChildToList(Object object) {
-		// TODO Auto-generated method stub
-		
-	}
 
 	@Override
 	public XSerializable[] getObjectList() {

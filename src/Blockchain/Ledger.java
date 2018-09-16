@@ -12,9 +12,11 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Properties;
 
+import Builders.BlockBuilder;
 import Managers.Configurable;
 import Managers.DebugManager;
 import Managers.PropertiesManager;
+import Managers.SerializationManager;
 
 
 public class Ledger implements Configurable {
@@ -75,14 +77,16 @@ public class Ledger implements Configurable {
 			private boolean addBlock(Block block)
 			{
 				
-				if(verify(block))
+				if(BlockBuilder.getInstance(block).isReady())
 				{
 					try
 					{
 						
-					if(block.getPreviousHash().equals(getLastBlock().getPreviousHash()))
+					if(block.getPreviousHash().equals(getLastBlock().getHash()))
 					{
 						list_of_blocks.add(block);
+						balance_register.update(block);
+						active_peers_register.update(block);
 						return true;
 					}
 					
@@ -108,10 +112,19 @@ public class Ledger implements Configurable {
 			{
 				int how_many_to_delete = list_of_blocks.size()-how_many_blocks_to_be_left;
 				if(how_many_to_delete<=0) return;
+				try
+				{
+					
+				
 				for(int i =0; i<how_many_to_delete; i++)
 				{
 					if(writeBlockToFile(list_of_blocks.get(i))) list_of_blocks.remove(i);
 					else return;
+				}
+				}
+				catch(Exception e)
+				{
+					DebugManager.alert(e);
 				}
 				return;
 			}
@@ -135,45 +148,36 @@ public class Ledger implements Configurable {
 				{
 					addBlock(readBlockFromFile(new File(path_to_blockchain+"/block#"+max_number+".blo")));
 				} 
-				catch (CouldntReadBlockException e) 
+				catch (Exception e) 
 				{
 					DebugManager.alert(e);
 				}
 				return true;
 			}
 			
-			private boolean writeBlockToFile(Block block)
+			private boolean writeBlockToFile(Block block, File file) throws Exception
 			{
-				ObjectOutputStream ous=null;
-				if(block==null) return false;
-				try
-				{
-					ous = new ObjectOutputStream(new FileOutputStream(path_to_blockchain+"/block#"+block.getID()+".blo"));
-					oos.writeObject(block);
-				}
-				catch(Exception e)
-				{
-				if(ous!=null)
-					try
-					{
-						ous.close();
-					} 
-					catch (Exception e1) 
-					{
-						DebugManager.alert(e1);
-					}
-					DebugManager.alert(e);
-				}
 				
-				try
-				{
-					ous.close();
-				}
-				catch (Exception e)
-				{
-					DebugManager.alert(e);
-				}
+				FileOutputStream fos = new FileOutputStream(file);
+				String s = SerializationManager.saveObjectToString(block);
+				byte b[] =s.getBytes();
+				fos.write(b);
+				fos.close();
 				return true;
+				
+			}
+			
+			
+			private boolean writeBlockToFile(Block block) throws Exception
+			{
+				String path = path_to_blockchain+"/block"+Integer.toString(block.getID())+".blo";
+				FileOutputStream fos = new FileOutputStream(path);
+				String s = SerializationManager.saveObjectToString(block);
+				byte b[] =s.getBytes();
+				fos.write(b);
+				fos.close();
+				return true;
+				
 			}
 			
 			
@@ -203,72 +207,36 @@ public class Ledger implements Configurable {
 			}
 			
 			
-			private Block readBlockFromFile(File file) throws CouldntReadBlockException
+			private Block readBlockFromFile(File file) throws Exception
 			{
-				Block block = null;
-				ObjectInputStream ois = null;
-				try
-				{
-				    ois = new ObjectInputStream(new FileInputStream(file));
-					block = (Block) ois.readObject();
-				}catch(Exception e)
-				{
-					DebugManager.alert(e);
-				}
+				String s="";
+				byte[] b;
+				int x;
+				
+					FileInputStream fis = new FileInputStream(file);
+					while(( x = fis.available())!=0)
+					{
+						b=new byte[x];
+						fis.read(b);
+						s+=new String(b);
+					}
+				fis.close();
+				
+				BlockBuilder block_builder = BlockBuilder.getInstance();
+				block_builder.loadPartFromString(s);
+				
+				Block block = (Block) block_builder.createPart();
+				
 				if(block==null) throw new CouldntReadBlockException();
+				
 				return block;
+				
 			}
 			
 		
-			private boolean verify(Block block)
-			{
-				if(block==null) return false;
-				if(!block.isHashProper()) return false;
-				Parcel parcel = null;
-				ArrayList<Parcel> parcels = (ArrayList<Parcel>) block.getParcels();
-				for(int i=0; i<parcels.size(); i++)
-				{
-					parcel = parcels.get(i);
-					if(!parcel.isSignatureValid()) return false;
-					if(parcel.getClass().equals(Transaction.class))
-					{
-						//verifying transaction
-						if(!verify((Transaction)parcel)) return false;
-					}
-					
-					else if(parcel.getClass().equals(Entry.class))
-					{
-						//verifying entry
-						if(!verify((Entry)parcel) return false;
-					}
-					
 
-					else if(parcel.getClass().equals(Exit.class))
-					{
-						//verifying exit
-						if(!verify((Exit)parcel)) return false;
-					}
-				}
-				return true;
-			}
+
 			
-			
-			private boolean verify(Transaction transaction)
-			{
-				return true;
-			}
-			
-			
-			private boolean verify(Entry entry)
-			{
-				return true;
-			}
-			
-			
-			private boolean verify(Exit exit)
-			{
-				return true;
-			}
 }
 
 

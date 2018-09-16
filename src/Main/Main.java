@@ -173,7 +173,7 @@ public class Main {
 	BlockBuilder block_builder = BlockBuilder.getInstance();
 	
 	
-	block_builder.createBlockFromScratch(12, 12, "genesis 21haha");
+	block_builder.createBlockFromScratch(12, 12, "gen   esis 21haha");
 	block_builder.addParcel((Transaction)trans);
 	block_builder.addParcel((Entry) entbuilder.createPart());
 	block_builder.addParcel((Transaction)trans);
@@ -186,8 +186,7 @@ public class Main {
 	FileOutputStream fos = new FileOutputStream("testowy.blo");
 	fos.write(s.getBytes());
 	fos.close();
-	
-	block_builder.b=block;
+
 	
 	load();
 	

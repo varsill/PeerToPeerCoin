@@ -1,15 +1,20 @@
 package Blockchain;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.util.ArrayList;
 import java.util.Hashtable;
+import java.util.Properties;
+import java.util.Set;
 
 import Managers.Configurable;
+import Managers.DebugManager;
+import Managers.PropertiesManager;
+import Managers.SerializationManager;
 
-public class BalanceRegister extends Register implements Configurable {
+public class BalanceRegister extends Register implements Configurable, XSerializable {
 
 	String path_to_file ="";
-	
-	
 	
 	//Singleton
 	Hashtable<String, Double> balance_list = null;
@@ -33,6 +38,7 @@ public class BalanceRegister extends Register implements Configurable {
 	{
 		static BalanceRegister INSTANCE = new BalanceRegister();
 	}
+	
 	
 	public double getBalanceByAddress(String public_key) throws AddressNotInBalanceRegisterException
 	{
@@ -98,14 +104,134 @@ public class BalanceRegister extends Register implements Configurable {
 	
 	private void readFromFile()
 	{
+		try
+		{
+			
+			FileInputStream fis = new FileInputStream(path_to_file);
+			int x;
+			byte[] b;
+			String s ="";
+			while((x=fis.available())!=0)
+			{
+				b=new byte[x];
+				fis.read(b);
+				s+=new String(b);
+			}
+			
+			fis.close();
+		}catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
+		
+		
 		
 	}
+	
+	
+	private void saveToFile()
+	{
+		try
+		{
+		byte[] b = SerializationManager.saveObjectToString(this).getBytes();
+		FileOutputStream fos = new FileOutputStream(path_to_file);	
+		fos.write(b);
+		fos.close();
+		}catch (Exception e)
+		{
+			DebugManager.alert(e);
+		}
+	}
+	
+	
 	@Override
 	public void configure()
 	{
+		Properties properties = new Properties();
+		try
+		{
+			properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
+			path_to_file = properties.getProperty("PATH_TO_BALANCE_REGISTER");
+		}
+		catch(Exception e)
+		{
+			DebugManager.alert(e);
+		}
 	}
 	//REST
+
+
+	@Override
+	public String[] getListOfObjectNames() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public XSerializable[] getObjectList() {
+
+				
+				Set<String>public_keys = balance_list.keySet();
+				
+				XSerializableType x;
+				
+				XSerializableType[] result = new XSerializableType[public_keys.size()];
+				
+				int i=0;
+				for(String key: public_keys)
+				{
+					x=new XSerializableType();
+					x.public_key = key;
+					x.amount = balance_list.get(key).doubleValue();
+					result[i]=x;
+					i++;
+				}
+		
+		
+		return result;
+	}
 	
+	
+	private class XSerializableType implements XSerializable
+	{
+		public String public_key;
+		public double amount;
+		@Override
+		public String[] getListOfObjectNames() {
+
+			String[] s = {"public_key", "amount"};
+			return s;
+			
+		}
+
+
+		@Override
+		public XSerializable[] getObjectList() {
+			// TODO Auto-generated method stub
+			return null;
+		}
+		
+	}
+	
+	
+	public void update(Block block)
+	{
+		try
+		{
+			
+		
+		ArrayList<Transaction> transactions = (ArrayList<Transaction>) block.getTransactions();
+		for(Transaction t:transactions)
+		{
+			updateWithTransaction(t);
+		}
+		
+		}catch(NotEnoughMoneyException e)
+		{
+			DebugManager.alert(e);
+		}
+	}
 	
 }
 class AddressNotInBalanceRegisterException extends Exception

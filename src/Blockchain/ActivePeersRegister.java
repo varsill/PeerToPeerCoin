@@ -16,4 +16,19 @@ public class ActivePeersRegister extends Register {
 	{
 		static	ActivePeersRegister INSTANCE = new ActivePeersRegister();
 	}
+	
+	//Rest
+	
+	
+	public void update(Entry e)
+	{
+		
+	}
+	
+	
+	public void update(Exit e)
+	{
+		
+	}
+	
 }

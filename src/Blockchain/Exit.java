@@ -30,12 +30,6 @@ public class Exit extends Parcel implements XSerializable{
 	}
 
 
-	@Override
-	public void addChildToList(Object object) {
-		// TODO Auto-generated method stub
-		
-	}
-
 
 	@Override
 	public XSerializable[] getObjectList() {

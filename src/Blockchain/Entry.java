@@ -37,11 +37,6 @@ public class Entry extends Parcel implements XSerializable{
 	}
 
 
-	@Override
-	public void addChildToList(Object object) {
-		// TODO Auto-generated method stub
-		
-	}
 
 
 	@Override

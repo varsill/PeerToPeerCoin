@@ -20,8 +20,6 @@ import Security.HashManager;
 
 public class BlockBuilder extends Block implements  Builder {
 	 
-	public Block b=null;
-	
 	//Singleton
 	
 		private BlockBuilder()
