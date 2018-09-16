@@ -18,7 +18,12 @@ public class SerializationManager {
 	static public String[] makeSubstrings(String string, String beginning_expression, String end_expression, String splitting_exp)
 	{
 		String proper_string = "";
-		if(beginning_expression=="#BEGIN") 
+		
+		if(beginning_expression=="#BEGIN"&&end_expression=="#END")
+		{
+			proper_string=string;
+		}
+		else if(beginning_expression=="#BEGIN") 
 			{
 			proper_string=string.substring(0, string.indexOf(end_expression));
 			}
@@ -26,6 +31,7 @@ public class SerializationManager {
 			{
 			proper_string=string.substring(string.indexOf(beginning_expression)+beginning_expression.length());
 			}
+		
 		else 
 			{
 			proper_string=string.substring(string.indexOf(beginning_expression)+beginning_expression.length(), string.indexOf(end_expression));
@@ -66,8 +72,12 @@ public class SerializationManager {
 	
 		
 			ArrayList<String> fields_names_list =new ArrayList<String>();
+		String [] fields_names_from_XSerializable =	x.getListOfObjectNames();
+		if(fields_names_from_XSerializable!=null)
+		{
 			
-			for(String s: x.getListOfObjectNames())
+		
+			for(String s: fields_names_from_XSerializable)
 			{
 				fields_names_list.add(s);
 			}
@@ -112,9 +122,9 @@ public class SerializationManager {
 			
 		}
 		
+		}
 		
-		
-		if(result.charAt(result.length()-1)==';') 
+		if(result.length()>0&&result.charAt(result.length()-1)==';') 
 		{
 			result=result.delete(result.length()-1, result.length());
 		}

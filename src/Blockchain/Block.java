@@ -203,7 +203,7 @@ public class Block implements XSerializable
 	}
 	
 	
-	public List<Exits> getExits()
+	public List<Exit> getExits()
 	{
 		ArrayList<Exit> exits = new ArrayList<Exit>();
 		for(Parcel p: list_of_parcels)

@@ -21,6 +21,17 @@ public class Entry extends Parcel implements XSerializable{
 	}
 	
 	
+	//DO USUNIECIA!!!!!!!!!!!!!!!!!!!!!!
+	
+	public Entry(double hash_rate, String IP, String public_key, String signature, long time)
+	{
+		this.hash_rate=hash_rate;
+		this.IP=IP;
+		this.public_key=public_key;
+		this.signature=signature;
+		this.time=time;
+	}
+	// 
 	@Override
 	public String createString()
 	{

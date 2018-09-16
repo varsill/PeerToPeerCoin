@@ -23,8 +23,11 @@ public class Ledger implements Configurable {
 	
 	private ArrayList<Block> list_of_blocks = null; 
 	private String path_to_blockchain="";
+	private String path_to_balance_register="";
+	private String path_to_active_peers_register = "";
 	private ActivePeersRegister active_peers_register = null;
 	private BalanceRegister balance_register = null;
+	
 	//Singleton
 	
 			private Ledger() 
@@ -155,21 +158,13 @@ public class Ledger implements Configurable {
 				return true;
 			}
 			
-			private boolean writeBlockToFile(Block block, File file) throws Exception
-			{
-				
-				FileOutputStream fos = new FileOutputStream(file);
-				String s = SerializationManager.saveObjectToString(block);
-				byte b[] =s.getBytes();
-				fos.write(b);
-				fos.close();
-				return true;
-				
-			}
 			
-			
-			private boolean writeBlockToFile(Block block) throws Exception
+			private boolean writeBlockToFile(Block block)
 			{
+				try
+				{
+					
+				
 				String path = path_to_blockchain+"/block"+Integer.toString(block.getID())+".blo";
 				FileOutputStream fos = new FileOutputStream(path);
 				String s = SerializationManager.saveObjectToString(block);
@@ -177,9 +172,45 @@ public class Ledger implements Configurable {
 				fos.write(b);
 				fos.close();
 				return true;
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+				}
+			}
+			
+			private boolean writeBalanceRegisterToFile()
+			{
+				try
+				{
+				if(this.balance_register==null) return false;
+				FileOutputStream fos = new FileOutputStream(path_to_balance_register);
+				fos.write(balance_register.saveToString().getBytes());
+				fos.close();
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+					return false;
+				}
+				return true;
 				
 			}
 			
+			
+			private boolean writeActivePeersRegisterToFile()
+			{
+				try
+				{
+				if(this.active_peers_register==null) return false;
+				FileOutputStream fos = new FileOutputStream(path_to_active_peers_register);
+				fos.write(active_peers_register.saveToString().getBytes());
+				fos.close();
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+					return false;
+				}
+				return true;
+			}
 			
 			
 			private void readBlocksFromNetwork(InputStream stream)
@@ -234,6 +265,49 @@ public class Ledger implements Configurable {
 			}
 			
 		
+			
+			public boolean readBalanceRegisterFromFile()
+			{
+				try
+				{
+				
+					FileInputStream fis = new FileInputStream(path_to_balance_register);
+					byte[] b = new byte[fis.available()];
+					fis.read(b);
+					String s = new String(b);
+					balance_register.loadRegisterFromString(s);					
+					fis.close();
+				
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+					return false;
+				}
+				return true;
+				
+				
+			}
+			
+			
+			public boolean readActivePeersRegisterFromFile()
+			{
+				try
+				{
+				
+					FileInputStream fis = new FileInputStream(path_to_active_peers_register);
+					byte[] b = new byte[fis.available()];
+					fis.read(b);
+					String s = new String(b);
+					active_peers_register.loadRegisterFromString(s);					
+					fis.close();
+				
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+					return false;
+				}
+				return true;
+			}
 
 
 			

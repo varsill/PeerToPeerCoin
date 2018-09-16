@@ -12,19 +12,17 @@ import Managers.DebugManager;
 import Managers.PropertiesManager;
 import Managers.SerializationManager;
 
-public class BalanceRegister extends Register implements Configurable, XSerializable {
+public class BalanceRegister extends Register implements XSerializable {
 
-	String path_to_file ="";
-	
+
 	//Singleton
 	Hashtable<String, Double> balance_list = null;
-
+	
 	
 	private BalanceRegister()
 	{
 		balance_list = new Hashtable<String, Double>();
-		configure();
-		readFromFile();
+	//	readFromFile();
 	}
 	
 	
@@ -58,7 +56,7 @@ public class BalanceRegister extends Register implements Configurable, XSerializ
 	}
 	
 	
-	public void updateWithTransaction(Transaction transaction) throws NotEnoughMoneyException
+	public void update(Transaction transaction) throws NotEnoughMoneyException
 	{
 		PayInformation payer = transaction.getPayer();
 		double payer_balance = balance_list.get(payer.getPublicKey());
@@ -102,63 +100,29 @@ public class BalanceRegister extends Register implements Configurable, XSerializ
 	}
 	
 	
-	private void readFromFile()
+	public void loadRegisterFromString(String s) throws Exception
 	{
-		try
-		{
-			
-			FileInputStream fis = new FileInputStream(path_to_file);
-			int x;
-			byte[] b;
-			String s ="";
-			while((x=fis.available())!=0)
-			{
-				b=new byte[x];
-				fis.read(b);
-				s+=new String(b);
-			}
-			
-			fis.close();
-		}catch(Exception e)
-		{
-			DebugManager.alert(e);
-		}
+		balance_list = new Hashtable<String, Double>;
+		String[] string_array =SerializationManager.makeSubstrings(s, ">", "</", "&");
 		
+		for(String x: string_array)
+		{
+			String[] string_array2=SerializationManager.makeSubstrings(x, "#BEGIN", "#END", ";");
+			if(string_array2.length!=2) throw new Exception("Wrong number of parameters. Couldn't create BlockRegister from string");
+			balance_list.put(string_array2[0], Double.parseDouble(string_array2[1]));
+		}
 		
 		
 	}
 	
 	
-	private void saveToFile()
+	public String saveToString() throws Exception
 	{
-		try
-		{
-		byte[] b = SerializationManager.saveObjectToString(this).getBytes();
-		FileOutputStream fos = new FileOutputStream(path_to_file);	
-		fos.write(b);
-		fos.close();
-		}catch (Exception e)
-		{
-			DebugManager.alert(e);
-		}
+		
+		String s = SerializationManager.saveObjectToString(this);
+		return s;
+		
 	}
-	
-	
-	@Override
-	public void configure()
-	{
-		Properties properties = new Properties();
-		try
-		{
-			properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
-			path_to_file = properties.getProperty("PATH_TO_BALANCE_REGISTER");
-		}
-		catch(Exception e)
-		{
-			DebugManager.alert(e);
-		}
-	}
-	//REST
 
 
 	@Override
@@ -193,26 +157,7 @@ public class BalanceRegister extends Register implements Configurable, XSerializ
 	}
 	
 	
-	private class XSerializableType implements XSerializable
-	{
-		public String public_key;
-		public double amount;
-		@Override
-		public String[] getListOfObjectNames() {
 
-			String[] s = {"public_key", "amount"};
-			return s;
-			
-		}
-
-
-		@Override
-		public XSerializable[] getObjectList() {
-			// TODO Auto-generated method stub
-			return null;
-		}
-		
-	}
 	
 	
 	public void update(Block block)
@@ -224,7 +169,7 @@ public class BalanceRegister extends Register implements Configurable, XSerializ
 		ArrayList<Transaction> transactions = (ArrayList<Transaction>) block.getTransactions();
 		for(Transaction t:transactions)
 		{
-			updateWithTransaction(t);
+			update(t);
 		}
 		
 		}catch(NotEnoughMoneyException e)
@@ -234,8 +179,39 @@ public class BalanceRegister extends Register implements Configurable, XSerializ
 	}
 	
 }
+
+
+
+ class XSerializableType implements XSerializable
+{
+	public String public_key;
+	public double amount;
+	@Override
+	public String[] getListOfObjectNames() {
+
+		String[] s = {"public_key", "amount"};
+		return s;
+		
+	}
+
+
+	@Override
+	public XSerializable[] getObjectList() {
+		// TODO Auto-generated method stub
+		return null;
+	}
+	
+}
+
+
+
+
 class AddressNotInBalanceRegisterException extends Exception
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	String address="";
 	public AddressNotInBalanceRegisterException(String address)
 	{
@@ -251,6 +227,10 @@ class AddressNotInBalanceRegisterException extends Exception
 
 class NotEnoughMoneyException extends Exception
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	String address="";
 	double how_many_lacks = 0;
 	

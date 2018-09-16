@@ -14,6 +14,7 @@ import java.util.Base64;
 import java.util.Scanner;
 
 import Blockchain.Register;
+import Blockchain.ActivePeersRegister;
 import Blockchain.BalanceRegister;
 import Blockchain.Block;
 import Blockchain.Entry;
@@ -143,7 +144,7 @@ public class Main {
 	public static void main(String[] args) throws Exception 
 	{
 
-	
+/*	
 	BalanceRegister balance = BalanceRegister.getInstance();
 	AsymetricCipherManager asym = AsymetricCipherManager.getInstance();
 	balance.addNewPeer(new PayInformation(asym.getPublicKeyAsString(), 1000));
@@ -189,8 +190,27 @@ public class Main {
 
 	
 	load();
-	
-	}
+	*/
+		
+		String s = "<Blockchain.ActivePeersRegister$XSerializableType>hahaha;124.52.13.14;10.0&hehs;63.151.253.54;10.0&xddd;52.51.53.54;0.2&lels;52.51.53.54;633.0</Blockchain.ActivePeersRegister$XSerializableType>";
+	/*	
+		ActivePeersRegister active = ActivePeersRegister.getInstance();
+		Entry entry = new Entry(10, "124.52.13.14", "hahaha", "poidpis1", 2012);
+		active.update(entry);
+		 entry = new Entry(633, "52.51.53.54", "lels", "poidpis2", 5714);
+		 active.update(entry);
+		 entry = new Entry(0.2, "52.51.53.54", "xddd", "poidpis3", 1514);
+		 active.update(entry);
+		 entry = new Entry(10, "63.151.253.54", "hehs", "poidpis4", 5114);
+		 active.update(entry);
+		String s = SerializationManager.saveObjectToString(active);
+		System.out.println(s);
+		*/
+		ActivePeersRegister active = ActivePeersRegister.getInstance();
+		active.loadRegisterFromString(s);
+		System.out.println(active.getIPByPublicKey("xddd"));
+		return;
+		}
 	
 	
 	public static double testHashes(int number_of_tries)
