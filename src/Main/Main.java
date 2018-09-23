@@ -19,6 +19,7 @@ import Blockchain.BalanceRegister;
 import Blockchain.Block;
 import Blockchain.Entry;
 import Blockchain.Exit;
+import Blockchain.Ledger;
 import Blockchain.Parcel;
 import Blockchain.PayInformation;
 import Blockchain.Transaction;
@@ -26,6 +27,7 @@ import Builders.BlockBuilder;
 import Builders.EntryBuilder;
 import Builders.ExitBuilder;
 import Builders.TransactionBuilder;
+import Communication.P2PConnection;
 import Managers.DebugManager;
 import Managers.PropertiesManager;
 import Managers.SerializationManager;
@@ -135,6 +137,7 @@ public class Main {
 		block_builder.loadPartFromString(s);
 		Block block2 = (Block) block_builder.createPart();
 		System.out.println( block2.isHashProper() );
+		fis.close();
 		}
 		catch(Exception e)
 		{
@@ -192,7 +195,7 @@ public class Main {
 	load();
 	*/
 		
-		String s = "<Blockchain.ActivePeersRegister$XSerializableType>hahaha;124.52.13.14;10.0&hehs;63.151.253.54;10.0&xddd;52.51.53.54;0.2&lels;52.51.53.54;633.0</Blockchain.ActivePeersRegister$XSerializableType>";
+	//	String s = "<Blockchain.ActivePeersRegister$XSerializableType>hahaha;124.52.13.14;10.0&hehs;63.151.253.54;10.0&xddd;52.51.53.54;0.2&lels;52.51.53.54;633.0</Blockchain.ActivePeersRegister$XSerializableType>";
 	/*	
 		ActivePeersRegister active = ActivePeersRegister.getInstance();
 		Entry entry = new Entry(10, "124.52.13.14", "hahaha", "poidpis1", 2012);
@@ -205,11 +208,120 @@ public class Main {
 		 active.update(entry);
 		String s = SerializationManager.saveObjectToString(active);
 		System.out.println(s);
-		*/
+		
 		ActivePeersRegister active = ActivePeersRegister.getInstance();
 		active.loadRegisterFromString(s);
 		System.out.println(active.getIPByPublicKey("xddd"));
 		return;
+		*/
+	/*	
+	try
+	{
+		P2PConnection p2p = P2PConnection.getInstance();
+		
+		
+		p2p.prepareMessages("{ZuziaTo", "ahah");
+		p2p.prepareMessages("Suka}{PierdalnietaJest}{lele}{NaDodatekJestGlupia", "ahah");
+		p2p.prepareMessages("ITepa}{AToSucz}", "ahah");
+		String s="";
+		while((s=p2p.read())!=null)
+		{
+			System.out.println(s);
+		}
+		
+	}catch(Exception e)
+	{
+		DebugManager.alert(e);
+	}
+		
+	*/
+	/*
+	P2PConnection p2p = P2PConnection.getInstance();
+	
+	p2p.start("192.168.0.73",222);p2p.connect("192.168.0.73", 111);
+	//	p2p.start("192.168.0.73", 111); p2p.connect("192.168.0.73", 222);
+		p2p.write("192.168.0.73", "Zuzia to suka");
+		p2p.write("192.168.0.73", "Ale z niej sucz");
+		String s;
+		while(true)
+		{
+			if(p2p.isSomethingToRead())
+			{
+				s=p2p.read();
+				System.out.println("Po preparowaniu:"+s);
+			}
+		}
+	
+			
+	/*	
+		
+		p2p.prepareMessages("{Zuzia to suka}    ", "lels");
+		p2p.prepareMessages("              ", "lels");
+		p2p.prepareMessages("   {xdddd}", "lels");
+		System.out.println(p2p.read());
+		System.out.println(p2p.read());
+	*/	
+		
+	/*	while(true)
+		{
+			System.out.println("elo");
+			String s="";
+			if((s=p2p.read())!=null)
+				System.out.println(s);
+		}
+		
+	*/	
+		
+		BalanceRegister balance = BalanceRegister.getInstance();
+		AsymetricCipherManager asym = AsymetricCipherManager.getInstance();
+		balance.addNewPeer(new PayInformation(asym.getPublicKeyAsString(), 1000));
+		Ledger ledger = Ledger.getInstance();
+		
+		 P2PConnection p2p = P2PConnection.getInstance();
+		p2p.start("192.168.0.73", 222);
+		ledger.sendBlockViaNetwork("192.168.0.73", 111);
+		String s;
+		while(true)
+		{
+			
+			if(p2p.isSomethingToRead())
+			{
+				ledger.addBlockFromNetworkToBlockchain(p2p.read());
+				break;
+			}
+			
+		}
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+		
+	
 		}
 	
 	
@@ -250,6 +362,7 @@ public class Main {
 
 	public static String toBinary(byte[] b)
 	{
+		
 		String result="";
 		String to_be_added;
 		String x;
@@ -264,6 +377,7 @@ public class Main {
 				x=x+to_be_added;
 			result=result+x;
 		}
+		//
 		return result;
 	}
 }

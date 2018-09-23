@@ -6,12 +6,14 @@ import java.util.List;
 import Blockchain.Transaction;
 import Managers.DebugManager;
 import Managers.SerializationManager;
+
 import Blockchain.BalanceRegister;
 import Blockchain.PayInformation;
 public class TransactionBuilder extends Transaction implements Builder {
 	
 	private BalanceRegister balance_register = BalanceRegister.getInstance();
-	private int total_amount=0;
+	private double total_amount=0;
+	private static boolean is_prize=false;//set true in case of this transaction being prize transaction
 	//Singleton
 	
 	private TransactionBuilder()
@@ -29,8 +31,11 @@ public class TransactionBuilder extends Transaction implements Builder {
 	static public TransactionBuilder getInstance()
 	{
 		SingletonHolder.INSTANCE.reset();
+		is_prize=false;
 		return SingletonHolder.INSTANCE;
+		
 	}
+	
 	
 	static public TransactionBuilder getInstance(Transaction x)
 	{
@@ -46,6 +51,12 @@ public class TransactionBuilder extends Transaction implements Builder {
 	
 	
 	//Rest
+	
+	public void setTransactionAsPrize(){
+		this.is_prize=true;
+	}
+	
+	
 	@Override
 	 public Object createPart() throws Exception
 	{
@@ -64,6 +75,15 @@ public class TransactionBuilder extends Transaction implements Builder {
 		if(public_key==null) return false;
 		if(payer==null) return false;
 		if(time==-1) return false;
+		if(!is_prize)
+		{
+			try {
+				if(payer.getAmount()>BalanceRegister.getInstance().getBalanceAsDoubleByAddress(payer.getPublicKey())) return false;
+			} catch (Exception e) {
+				DebugManager.alert(e);
+				return false;
+			}
+		}
 		if(total_amount>(payer.getAmount())) return false;
 		if(!isSignatureValid()) return false;
 		return true;

@@ -141,6 +141,7 @@ public class BlockBuilder extends Block implements  Builder {
 		{
 			if(!p.isSignatureValid()) return false;
 		}
+		
 		return true;
 		
 	}

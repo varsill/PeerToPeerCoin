@@ -13,10 +13,13 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import Builders.BlockBuilder;
+import Builders.TransactionBuilder;
+import Communication.P2PConnection;
 import Managers.Configurable;
 import Managers.DebugManager;
 import Managers.PropertiesManager;
 import Managers.SerializationManager;
+import Security.AsymetricCipherManager;
 
 
 public class Ledger implements Configurable {
@@ -27,7 +30,11 @@ public class Ledger implements Configurable {
 	private String path_to_active_peers_register = "";
 	private ActivePeersRegister active_peers_register = null;
 	private BalanceRegister balance_register = null;
-	
+	private ArrayList<Parcel> unprocessed_parcels=null;
+	private ArrayList<Peer> previous_network_state=null;
+	private int T=0;
+	public static double PRIZE = 2*10;// 10 coins for miner who has mined the block and 10 coins for rest of the miners, proportionally for their effort in minning the previous block
+	AsymetricCipherManager asymetric_cipher_manager=null;
 	//Singleton
 	
 			private Ledger() 
@@ -35,7 +42,15 @@ public class Ledger implements Configurable {
 				list_of_blocks = new ArrayList<Block>();
 				active_peers_register = ActivePeersRegister.getInstance();
 				balance_register = BalanceRegister.getInstance();
+				unprocessed_parcels=new ArrayList<Parcel>();
+				asymetric_cipher_manager=AsymetricCipherManager.getInstance();
+				T=10 * 60; //10 min in seconds
+				
 				configure();
+				loadLastBlock();
+				loadActivePeersRegisterFromFile();
+				loadBalanceRegisterFromFile();
+				System.out.println("Last block has been loaded");
 			}
 			
 				
@@ -59,6 +74,7 @@ public class Ledger implements Configurable {
 				{
 					properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
 					path_to_blockchain = properties.getProperty("PATH_TO_BLOCKCHAIN");
+					
 				}
 				catch(Exception e)
 				{
@@ -66,50 +82,7 @@ public class Ledger implements Configurable {
 				}
 				
 			}
-			
-			
-			public void scrollThroughLedger()
-			{
-				
-				
-				
-				
-			}
 	
-			
-			private boolean addBlock(Block block)
-			{
-				
-				if(BlockBuilder.getInstance(block).isReady())
-				{
-					try
-					{
-						
-					if(block.getPreviousHash().equals(getLastBlock().getHash()))
-					{
-						list_of_blocks.add(block);
-						balance_register.update(block);
-						active_peers_register.update(block);
-						return true;
-					}
-					
-					}
-					catch(Exception e)
-					{
-						DebugManager.alert(e);
-						return false;
-					}
-				}
-				return false;
-			}
-			
-			
-			private Block getLastBlock() throws BlockchainIsEmptyException
-			{
-				if(list_of_blocks==null||list_of_blocks.size()==0) throw new BlockchainIsEmptyException();
-				return list_of_blocks.get(list_of_blocks.size()-1);
-			}
-			
 			
 			private void reduceTail(int how_many_blocks_to_be_left)
 			{
@@ -133,30 +106,203 @@ public class Ledger implements Configurable {
 			}
 			
 			
-			private boolean loadLastBlock()
+			//GET
+			
+			private Block getLastBlock() 
 			{
-				File directory = new File(path_to_blockchain);
-				if(!directory.isDirectory()) return false;
-				String[] file_names = directory.list();
-				int max_number = 0;
-				
-				for(int i=0; i<file_names.length; i++)
+				if(list_of_blocks==null||list_of_blocks.size()==0) return null;
+				return list_of_blocks.get(list_of_blocks.size()-1);
+			}
+			
+			
+			public Block getBlock(int id)
+			{
+				Block result;
+				for(int i=0; i<list_of_blocks.size(); i++)
 				{
-					String number_chars = file_names[i].substring(file_names[i].indexOf('#'), file_names[i].indexOf('.'));
-					int number = Integer.parseInt(number_chars);
-					if(number>max_number) max_number=number;
+					result = list_of_blocks.get(i);
+					if(result.getID()==id)
+					{
+						return result;
 					}
+				}
+				return null;
+			}
+			
+			
+			public Block getBlock(String hash)
+			{
+				Block result;
+				for(int i=0; i<list_of_blocks.size(); i++)
+				{
+					result = list_of_blocks.get(i);
+					if(result.getHash()==hash)
+					{
+						return result;
+					}
+				}
+				return null;
+			}
+			
+			
+			//CREATE
+			
+			
+			public Block createBlock()
+			{
+				BlockBuilder builder = BlockBuilder.getInstance();
+				Block previous_block = getLastBlock();
+				builder.createBlockFromScratch(previous_block.getID(), getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
+				TransactionBuilder trans_builder = TransactionBuilder.getInstance();
+				trans_builder.setTransactionAsPrize();
+				trans_builder.addPayer(asymetric_cipher_manager.getPublicKeyAsString(), PRIZE);
+				double total_previous_hash_rate=0;
+				for(Peer p:previous_network_state)
+				{
+					total_previous_hash_rate+=p.getHashRate();
+				}
+				double fraction;
+				for(Peer p:previous_network_state)
+				{
+					fraction=p.getHashRate()/total_previous_hash_rate;
+					trans_builder.addPayee(p.getPublicKey(), fraction*T);
+				}
 				
+				
+				trans_builder.prepareNew();
+				Transaction transaction=null;
+				try {
+					transaction = (Transaction) trans_builder.createPart();
+				} catch (Exception e1) {
+					DebugManager.alert(e1);
+				}
+				
+				addTransaction(transaction);
+				for(Parcel p:unprocessed_parcels)
+				{
+					builder.addParcel(p);
+				}
+				
+				builder.proof();
+				
+				
+				try {
+					return (Block) builder.createPart();
+				} catch (Exception e) {
+					DebugManager.alert(e);
+				}
+				return null;
+				
+				
+				
+			}
+			
+			
+			private int getDifficulty(double hash_rate) {
+				long number_of_hashes = (long) ((long) T*hash_rate);
+				int result =(int) Math.ceil(Math.log(number_of_hashes)/Math.log(2));
+				return result;
+			}
+			
+			//ADD
+
+			
+			public void addTransaction(Transaction transaction)
+			{
 				try
 				{
-					addBlock(readBlockFromFile(new File(path_to_blockchain+"/block#"+max_number+".blo")));
-				} 
-				catch (Exception e) 
+					this.balance_register.update(transaction);
+					this.unprocessed_parcels.add(transaction);
+				}catch(Exception e)
 				{
 					DebugManager.alert(e);
 				}
-				return true;
+				
 			}
+			
+			
+			public void addEntry(Entry entry)
+			{
+				try
+				{
+					this.active_peers_register.update(entry);
+					this.unprocessed_parcels.add(entry);
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+				}
+			
+			}
+			
+			
+			
+			public void addExit(Exit exit)
+			{
+				try
+				{
+				
+				this.active_peers_register.update(exit);
+				this.unprocessed_parcels.add(exit);
+				}
+				catch(Exception e)
+				{
+					DebugManager.alert(e);
+				}
+			}
+			
+			
+
+			public boolean addBlock(Block block)
+			{
+				
+				if(BlockBuilder.getInstance(block).isReady())
+				{
+					try
+					{
+					if(getLastBlock()==null)
+					{
+						list_of_blocks.add(block);
+						balance_register.update(block);
+						active_peers_register.update(block);
+						return true;
+					}
+					if(block.getPreviousHash().equals(getLastBlock().getHash()))
+					{
+						list_of_blocks.add(block);
+						balance_register.update(block);
+						active_peers_register.update(block);
+						return true;
+					}
+					throw new Exception("Previous hash of the new block doesn't match the hash of our last block");
+					}
+					catch(Exception e)
+					{
+						DebugManager.alert(e);
+						return false;
+					}
+				}
+				return false;
+			}
+			
+			
+			
+			
+			//WRITE
+			
+			public void writeBlockViaNetwork(String IP, int port, Block block)
+			{
+				P2PConnection p2p = P2PConnection.getInstance();
+				p2p.connect(IP, port);
+				try {
+					String s=SerializationManager.saveObjectToString(block);
+					p2p.write(IP,s);
+				} catch (Exception e) {
+					DebugManager.alert(e);
+				}
+				
+			}
+			
+			
 			
 			
 			private boolean writeBlockToFile(Block block)
@@ -165,7 +311,7 @@ public class Ledger implements Configurable {
 				{
 					
 				
-				String path = path_to_blockchain+"/block"+Integer.toString(block.getID())+".blo";
+				String path = path_to_blockchain+"/block#"+Integer.toString(block.getID())+".blo";
 				FileOutputStream fos = new FileOutputStream(path);
 				String s = SerializationManager.saveObjectToString(block);
 				byte b[] =s.getBytes();
@@ -175,8 +321,10 @@ public class Ledger implements Configurable {
 				}catch(Exception e)
 				{
 					DebugManager.alert(e);
+					return false;
 				}
 			}
+			
 			
 			private boolean writeBalanceRegisterToFile()
 			{
@@ -213,28 +361,23 @@ public class Ledger implements Configurable {
 			}
 			
 			
-			private void readBlocksFromNetwork(InputStream stream)
+			//READ
+			
+			
+			private Block readBlockFromString(String s)
 			{
-				ObjectInputStream ois = null;
-				try
-				{
-					ois = new ObjectInputStream(stream);
-				}
-				catch(Exception e)
-				{
-					DebugManager.alert(e);
-				}
+				BlockBuilder builder = BlockBuilder.getInstance();
+				builder.loadPartFromString(s);
+				Block block = null;
 				try {
-					while(ois.available()>0)
-					{
-						addBlock((Block)ois.readObject());
-					}
-				}
-				catch (Exception e)
-				{
+					 block = (Block) builder.createPart();
+				} catch (Exception e) {
+					
 					DebugManager.alert(e);
 				}
 				
+				return block;
+			
 			}
 			
 			
@@ -264,9 +407,19 @@ public class Ledger implements Configurable {
 				
 			}
 			
-		
 			
-			public boolean readBalanceRegisterFromFile()
+			//LOAD = READ+ADD
+
+			public boolean loadBlockFromString(String s)
+			{
+				Block block = readBlockFromString(s);
+				if(block==null) return false;
+				addBlock(block);
+				return true;
+			}
+			
+			
+			public boolean loadBalanceRegisterFromFile()
 			{
 				try
 				{
@@ -289,7 +442,33 @@ public class Ledger implements Configurable {
 			}
 			
 			
-			public boolean readActivePeersRegisterFromFile()
+			private boolean loadLastBlock()
+			{
+				File directory = new File(path_to_blockchain);
+				if(!directory.isDirectory()) return false;
+				String[] file_names = directory.list();
+				int max_number = 0;
+				
+				for(int i=0; i<file_names.length; i++)
+				{
+					String number_chars = file_names[i].substring(file_names[i].indexOf('#')+1, file_names[i].indexOf('.'));
+					int number = Integer.parseInt(number_chars);
+					if(number>max_number) max_number=number;
+					}
+				
+				try
+				{
+					addBlock(readBlockFromFile(new File(path_to_blockchain+"/block#"+max_number+".blo")));
+				} 
+				catch (Exception e) 
+				{
+					DebugManager.alert(e);
+				}
+				return true;
+			}
+			
+			
+			public boolean loadActivePeersRegisterFromFile()
 			{
 				try
 				{
@@ -312,11 +491,6 @@ public class Ledger implements Configurable {
 
 			
 }
-
-
-			
-
-
 
 
 class BlockchainIsEmptyException extends Exception

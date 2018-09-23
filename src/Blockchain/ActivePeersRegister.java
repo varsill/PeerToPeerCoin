@@ -35,8 +35,10 @@ public class ActivePeersRegister extends Register implements XSerializable {
 	}
 	
 	
-	public void update(Entry e)
+	public void update(Entry e) throws Exception
 	{
+		
+		if(!e.isSignatureValid()) throw new Exception("Signature is valid");
 		Peer peer = list_of_peers.get(e.public_key);
 		if(peer==null) 
 			{
@@ -55,7 +57,7 @@ public class ActivePeersRegister extends Register implements XSerializable {
 	
 	
 	
-	public void update(Block b)
+	public void update(Block b) throws Exception
 	{
 		ArrayList<Entry> entries = (ArrayList<Entry>)b.getEntries();
 		ArrayList<Exit> exits = (ArrayList<Exit>)b.getExits();
@@ -73,8 +75,9 @@ public class ActivePeersRegister extends Register implements XSerializable {
 		
 	}
 	
-	public void update(Exit e)
+	public void update(Exit e) throws Exception
 	{
+		if(!e.isSignatureValid()) throw new Exception("Signature is valid");
 		Peer peer = list_of_peers.get(e.public_key);
 		if(peer==null) return;
 		
@@ -167,7 +170,7 @@ class Peer
 	
 	private String IP="";
 	private double hash_rate=0;
-	
+	private String public_key=null;
 	
 	public Peer(String IP, double hash_rate)
 	{
@@ -180,6 +183,18 @@ class Peer
 	{
 		this.IP=IP;
 		this.hash_rate=hash_rate;
+	}
+	
+	
+	public void namePeer(String public_key)
+	{
+		this.public_key=public_key;
+	}
+	
+	
+	public String getPublicKey()
+	{
+		return public_key;
 	}
 	
 	

@@ -11,6 +11,7 @@ import Managers.Configurable;
 import Managers.DebugManager;
 import Managers.PropertiesManager;
 import Managers.SerializationManager;
+import Security.AsymetricCipherManager;
 
 public class BalanceRegister extends Register implements XSerializable {
 
@@ -94,6 +95,20 @@ public class BalanceRegister extends Register implements XSerializable {
 		
 	}
 	
+	
+	
+	public void addPrize()
+	{
+		String public_key=AsymetricCipherManager.getInstance().getPublicKeyAsString();
+		Double amount = balance_list.get(public_key);
+		if(amount==null)
+		{
+			addNewPeer(new PayInformation(public_key, 2*Ledger.PRIZE));
+			return;
+		}
+		amount=amount+2*Ledger.PRIZE;
+			
+	}
 	public void addNewPeer(PayInformation pay_information)
 	{
 		balance_list.put(pay_information.getPublicKey(), pay_information.getAmount());
@@ -102,7 +117,7 @@ public class BalanceRegister extends Register implements XSerializable {
 	
 	public void loadRegisterFromString(String s) throws Exception
 	{
-		balance_list = new Hashtable<String, Double>;
+		balance_list = new Hashtable<String, Double>();
 		String[] string_array =SerializationManager.makeSubstrings(s, ">", "</", "&");
 		
 		for(String x: string_array)
