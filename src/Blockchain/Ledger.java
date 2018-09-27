@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import Builders.BlockBuilder;
+import Builders.PrizeBuilder;
 import Builders.TransactionBuilder;
 import Communication.P2PConnection;
 import Managers.Configurable;
@@ -20,7 +21,7 @@ import Managers.DebugManager;
 import Managers.PropertiesManager;
 import Managers.SerializationManager;
 import Security.AsymetricCipherManager;
-
+import Builders.PrizeBuilder;
 
 public class Ledger implements Configurable {
 	
@@ -45,6 +46,20 @@ public class Ledger implements Configurable {
 				unprocessed_parcels=new ArrayList<Parcel>();
 				asymetric_cipher_manager=AsymetricCipherManager.getInstance();
 				T=10 * 60; //10 min in seconds
+				//DO USUNIECIA
+				
+				
+				
+				
+				previous_network_state=new ArrayList<Peer>();
+				previous_network_state.add(new Peer("192.54.53.4", 100, "dupa_blada"));
+				previous_network_state.add(new Peer("192.6.51.44", 300, "chuj_wam_w_dupe"));
+				previous_network_state.add(new Peer("145.63.56.4", 560, "i tobie tez"));
+				
+				
+				
+				
+				
 				
 				configure();
 				loadLastBlock();
@@ -145,6 +160,9 @@ public class Ledger implements Configurable {
 			}
 			
 			
+			
+		
+			
 			//CREATE
 			
 			
@@ -153,37 +171,23 @@ public class Ledger implements Configurable {
 				BlockBuilder builder = BlockBuilder.getInstance();
 				Block previous_block = getLastBlock();
 				builder.createBlockFromScratch(previous_block.getID(), getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
-				TransactionBuilder trans_builder = TransactionBuilder.getInstance();
-				trans_builder.setTransactionAsPrize();
-				trans_builder.addPayer(asymetric_cipher_manager.getPublicKeyAsString(), PRIZE);
-				double total_previous_hash_rate=0;
-				for(Peer p:previous_network_state)
-				{
-					total_previous_hash_rate+=p.getHashRate();
-				}
-				double fraction;
-				for(Peer p:previous_network_state)
-				{
-					fraction=p.getHashRate()/total_previous_hash_rate;
-					trans_builder.addPayee(p.getPublicKey(), fraction*T);
-				}
-				
-				
-				trans_builder.prepareNew();
-				Transaction transaction=null;
+				PrizeBuilder prize_builder = PrizeBuilder.getInstance();
+				prize_builder.createPrizeFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString());
+				prize_builder.prepareNew();
+				Prize prize=null;
 				try {
-					transaction = (Transaction) trans_builder.createPart();
+					prize = (Prize) prize_builder.createPart();
 				} catch (Exception e1) {
 					DebugManager.alert(e1);
 				}
 				
-				addTransaction(transaction);
+				addPrize(prize);
 				for(Parcel p:unprocessed_parcels)
 				{
 					builder.addParcel(p);
 				}
 				
-				builder.proof();
+				builder.prepareNew();
 				
 				
 				try {
@@ -196,6 +200,7 @@ public class Ledger implements Configurable {
 				
 				
 			}
+			
 			
 			
 			private int getDifficulty(double hash_rate) {
@@ -211,7 +216,6 @@ public class Ledger implements Configurable {
 			{
 				try
 				{
-					this.balance_register.update(transaction);
 					this.unprocessed_parcels.add(transaction);
 				}catch(Exception e)
 				{
@@ -220,12 +224,24 @@ public class Ledger implements Configurable {
 				
 			}
 			
+			public void addPrize(Prize prize)
+			{
+				try
+				{
+					this.unprocessed_parcels.add(prize);
+					
+				}
+				catch(Exception e)
+				{
+					DebugManager.alert(e);
+				}
+			}
+			
 			
 			public void addEntry(Entry entry)
 			{
 				try
 				{
-					this.active_peers_register.update(entry);
 					this.unprocessed_parcels.add(entry);
 				}catch(Exception e)
 				{
@@ -264,13 +280,17 @@ public class Ledger implements Configurable {
 						list_of_blocks.add(block);
 						balance_register.update(block);
 						active_peers_register.update(block);
+						PrizeBuilder.getInstance().saveNetworkState();
 						return true;
 					}
+					
+					
 					if(block.getPreviousHash().equals(getLastBlock().getHash()))
 					{
 						list_of_blocks.add(block);
 						balance_register.update(block);
 						active_peers_register.update(block);
+						PrizeBuilder.getInstance().saveNetworkState();
 						return true;
 					}
 					throw new Exception("Previous hash of the new block doesn't match the hash of our last block");
@@ -284,7 +304,7 @@ public class Ledger implements Configurable {
 				return false;
 			}
 			
-			
+		
 			
 			
 			//WRITE
@@ -375,7 +395,6 @@ public class Ledger implements Configurable {
 					
 					DebugManager.alert(e);
 				}
-				
 				return block;
 			
 			}
@@ -402,7 +421,6 @@ public class Ledger implements Configurable {
 				Block block = (Block) block_builder.createPart();
 				
 				if(block==null) throw new CouldntReadBlockException();
-				
 				return block;
 				
 			}

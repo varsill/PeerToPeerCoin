@@ -12,6 +12,7 @@ import Blockchain.Block;
 import Blockchain.Entry;
 import Blockchain.Exit;
 import Blockchain.Parcel;
+import Blockchain.Prize;
 import Blockchain.Transaction;
 import Managers.DebugManager;
 import Managers.PropertiesManager;
@@ -78,8 +79,18 @@ public class BlockBuilder extends Block implements  Builder {
 			ID = Integer.parseInt(info[3]);
 			time=Long.parseLong(info[4]);
 			Builder builder = null;
+			//Prize 
+			info = SerializationManager.makeSubstrings(s,  "<Blockchain.Prize>", "</Blockchain.Prize>","&");
+			PrizeBuilder prize_builder = PrizeBuilder.getInstance();
+			prize_builder.loadPartFromString(info[0]);
+			addParcel((PrizeBuilder)prize_builder.createPart());
+			
+			
 		//Transactions
 			info = SerializationManager.makeSubstrings(s, "<Blockchain.Transaction>", "</Blockchain.Transaction>", "&");
+			
+			
+			
 			
 			for(int i=0; i<info.length; i++)
 			{
@@ -137,10 +148,10 @@ public class BlockBuilder extends Block implements  Builder {
 		if(time==-1) return false;
 		if(merkle_root==null) return false;
 		if(!isHashProper()) return false;
-		for(Parcel p: list_of_parcels)
-		{
-			if(!p.isSignatureValid()) return false;
-		}
+		if(list_of_parcels.size()==0) return false;
+		Prize prize = (Prize) list_of_parcels.get(0);
+		if(!prize.getClass().equals(Prize.class)) return false;
+		
 		
 		return true;
 		

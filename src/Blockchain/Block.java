@@ -217,6 +217,19 @@ public class Block implements XSerializable
 		return exits;
 	}
 	
+	public Prize getPrize()
+	{
+		
+		for(Parcel p:list_of_parcels)
+		{
+			if(p.getClass().equals(Exit.class))
+			{
+				return (Prize) p;
+			}
+		}
+		return null;
+	}
+	
 	
 	protected void setMerkleRoot()
 	{
@@ -224,7 +237,7 @@ public class Block implements XSerializable
 		String s_trans = "";
 		String s_entries="";
 		String s_exits="";
-		
+		String s_prize="";
 		for(Parcel p:list_of_parcels)
 		{
 			if(p.getClass().equals(Transaction.class))
@@ -239,7 +252,11 @@ public class Block implements XSerializable
 			{
 				s_exits+=p.getHash();
 			}
-			String s = s_trans+s_entries+s_exits;
+			else if(p.getClass().equals(Prize.class))
+			{
+				s_prize+=p.getHash();
+			}
+			String s = s_trans+s_entries+s_exits+s_prize;
 			this.merkle_root= new String(digest(s));
 		}
 	}

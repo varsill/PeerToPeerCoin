@@ -272,25 +272,10 @@ public class Main {
 		
 	*/	
 		
-		BalanceRegister balance = BalanceRegister.getInstance();
-		AsymetricCipherManager asym = AsymetricCipherManager.getInstance();
-		balance.addNewPeer(new PayInformation(asym.getPublicKeyAsString(), 1000));
-		Ledger ledger = Ledger.getInstance();
 		
-		 P2PConnection p2p = P2PConnection.getInstance();
-		p2p.start("192.168.0.73", 222);
-		ledger.sendBlockViaNetwork("192.168.0.73", 111);
-		String s;
-		while(true)
-		{
 			
-			if(p2p.isSomethingToRead())
-			{
-				ledger.addBlockFromNetworkToBlockchain(p2p.read());
-				break;
-			}
-			
-		}
+		Ledger ledger = Ledger.getInstance();
+		ledger.
 		
 		
 		

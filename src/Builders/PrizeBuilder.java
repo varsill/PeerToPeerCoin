@@ -1,62 +1,58 @@
 package Builders;
+
 import java.util.ArrayList;
 
-import java.util.List;
-
+import Blockchain.ActivePeersRegister;
+import Blockchain.BalanceRegister;
+import Blockchain.Ledger;
+import Blockchain.PayInformation;
+import Blockchain.Peer;
+import Blockchain.Prize;
 import Blockchain.Transaction;
 import Managers.DebugManager;
 import Managers.SerializationManager;
 
-import Blockchain.BalanceRegister;
-import Blockchain.PayInformation;
-public class TransactionBuilder extends Transaction implements Builder {
-	
-	private BalanceRegister balance_register = BalanceRegister.getInstance();
-	private double total_amount=0;
-	
-	//Singleton
-	
-	protected TransactionBuilder()
+public class PrizeBuilder extends Prize implements Builder {
+	private ActivePeersRegister previous_network_state = null;
+//SINGLETON
+	private PrizeBuilder()
 	{
-		balance_register = BalanceRegister.getInstance();
-	}
-	
-	protected TransactionBuilder(Transaction x)
-	{
-		super(x);
-		balance_register = BalanceRegister.getInstance();
 		
 	}
 	
-	static public TransactionBuilder getInstance()
+	private PrizeBuilder(Prize x)
+	{
+		
+		
+	}
+	
+	static public PrizeBuilder getInstance()
 	{
 		SingletonHolder.INSTANCE.reset();
 		return SingletonHolder.INSTANCE;
 		
 	}
 	
-	
-	static public TransactionBuilder getInstance(Transaction x)
+	static class SingletonHolder
 	{
-		SingletonHolder.INSTANCE = new TransactionBuilder(x);
-		return SingletonHolder.INSTANCE;
+		static private PrizeBuilder INSTANCE = new PrizeBuilder();
 	}
 	
+	//REST
 	
-	static private class SingletonHolder
+	public void saveNetworkState()
 	{
-		static TransactionBuilder INSTANCE = new TransactionBuilder();
+		previous_network_state = ActivePeersRegister.getInstance().getSavedActivePeersRegister();
+		
 	}
 	
-	
-	//Rest
 	
 	@Override
 	 public Object createPart() throws Exception
 	{
 		
 		if(!isReady()) throw new Exception("Couldn't create transaction");
-		Transaction result = new Transaction(this);
+		Prize result = new Prize(this);
 		return result;
 		
 	}
@@ -69,16 +65,9 @@ public class TransactionBuilder extends Transaction implements Builder {
 		if(public_key==null) return false;
 		if(payer==null) return false;
 		if(time==-1) return false;
-		
-			try {
-				if(payer.getAmount()>BalanceRegister.getInstance().getBalanceAsDoubleByAddress(payer.getPublicKey())) return false;
-			} catch (Exception e) {
-				DebugManager.alert(e);
-				return false;
-			}
-		
-		if(total_amount>(payer.getAmount())) return false;
 		if(!isSignatureValid()) return false;
+		if(!isPrizeValid()) return false;
+		
 		return true;
 	}
 	
@@ -90,7 +79,7 @@ public class TransactionBuilder extends Transaction implements Builder {
 		 public_key=null;
 		 payer=null;
 		 payees_list=new ArrayList<PayInformation>();
-		 total_amount = 0;
+		
 		 time=-1;
 	}
 	
@@ -100,7 +89,6 @@ public class TransactionBuilder extends Transaction implements Builder {
 	{
 		if(amount<0)return;
 		super.addPayee(public_key, amount);
-		total_amount+=amount;
 	}
 
 
@@ -110,7 +98,6 @@ public class TransactionBuilder extends Transaction implements Builder {
 		if(information.length!=3) return;
 			
 			this.public_key=information[0];
-			addPayer(public_key, balance_register.getBalanceAsDoubleByAddress(public_key));
 			this.time=Long.parseLong(information[1]);
 			this.signature=information[2];
 			
@@ -130,15 +117,7 @@ public class TransactionBuilder extends Transaction implements Builder {
 
 	}	
 	
-	public void addPayer(String public_key)
-	{
-		try {
-			payer = new PayInformation(public_key, balance_register.getBalanceAsDoubleByAddress(public_key));
-		} catch (Exception e) {
-			DebugManager.alert(e);
-		}
-		this.public_key=public_key;
-	}
+	
 	
 	
 	@Override
@@ -147,5 +126,36 @@ public class TransactionBuilder extends Transaction implements Builder {
 		this.time=System.currentTimeMillis();
 		sign();
 	}
+	
+	
+	private boolean isPrizeValid()
+	{
+		ArrayList<PayInformation> payees = (ArrayList<PayInformation>) getPayees();
+		double total_previous_hash_rate=previous_network_state.getNetworksHashRate();
+		double prize;
+		for(PayInformation p:payees)
+		{
+			prize=p.getAmount();
+			if(p.getPublicKey()==this.public_key) prize-=Ledger.PRIZE;
+			if(previous_network_state.getHashRateByPublicKey(p.getPublicKey())/total_previous_hash_rate*Ledger.PRIZE!=prize) return false;
+		}
+		return true;
+	}
+	
+	
+	public void createPrizeFromScratch(String public_key)
+	{
+		
+		addPayee(public_key, Ledger.PRIZE);
+		ArrayList<Peer> list = previous_network_state.getPeersList();
+		double prize;
+		for(Peer p: list)
+		{
+			prize = p.getHashRate()/previous_network_state.getNetworksHashRate()*Ledger.PRIZE;
+			addPayee(p.getPublicKey(), prize);
+		}
+		
+	}
+	
 	
 }

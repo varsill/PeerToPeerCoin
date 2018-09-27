@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Hashtable;
 import java.util.Set;
 
+import Managers.DebugManager;
 import Managers.SerializationManager;
 
 public class ActivePeersRegister extends Register implements XSerializable {
@@ -32,6 +33,26 @@ public class ActivePeersRegister extends Register implements XSerializable {
 	public double getNetworksHashRate()
 	{
 		return this.hash_rate;
+	}
+	
+	
+	public ArrayList<Peer> getPeersList()
+	{
+		Set<String> keys = list_of_peers.keySet();
+		Peer p;
+		ArrayList<Peer> result = new ArrayList<Peer>();
+		for(String k:keys)
+		{
+			p = list_of_peers.get(k);
+			if(p!=null)
+				{
+					p.namePeer(k);
+				}
+				result.add(p);
+			
+		}
+		return result;
+		
 	}
 	
 	
@@ -146,6 +167,25 @@ public class ActivePeersRegister extends Register implements XSerializable {
 		}
 		return result;
 	}
+	
+	
+	public double getHashRateByPublicKey(String public_key)
+	{
+		Peer p = list_of_peers.get(public_key);
+		if(p==null ) return 0;
+		return p.getHashRate();
+	}
+	
+	public ActivePeersRegister getSavedActivePeersRegister()
+	{
+		try {
+			return (ActivePeersRegister) this.clone();
+		} catch (CloneNotSupportedException e) {
+			DebugManager.alert(e);
+		}
+		return null;
+	}
+	
 	private class XSerializableType implements XSerializable
 	{
 		public String public_key="";
@@ -165,65 +205,4 @@ public class ActivePeersRegister extends Register implements XSerializable {
 }
 
 
-class Peer 
-{
-	
-	private String IP="";
-	private double hash_rate=0;
-	private String public_key=null;
-	
-	public Peer(String IP, double hash_rate)
-	{
-		this.IP = IP;
-		this.hash_rate=hash_rate;
-	}
-	
-	
-	public void updatePeer(String IP, double hash_rate)
-	{
-		this.IP=IP;
-		this.hash_rate=hash_rate;
-	}
-	
-	
-	public void namePeer(String public_key)
-	{
-		this.public_key=public_key;
-	}
-	
-	
-	public String getPublicKey()
-	{
-		return public_key;
-	}
-	
-	
-	public void updatePeer(String IP)
-	{
-		this.IP=IP;
-	}
-	
-	
-	public void updatePeer(double hash_rate)
-	{
-		this.hash_rate=hash_rate;
-	}
-	
-	
-	public double getHashRate()
-	{
-		return this.hash_rate;
-	}
-	
-	
-	public String getIP()
-	{
-		return this.IP;
-	}
 
-
-	
-	
-	
-	
-}

@@ -59,6 +59,7 @@ public class BalanceRegister extends Register implements XSerializable {
 	
 	public void update(Transaction transaction) throws NotEnoughMoneyException
 	{
+		/*
 		PayInformation payer = transaction.getPayer();
 		double payer_balance = balance_list.get(payer.getPublicKey());
 		ArrayList<PayInformation> payees_list = (ArrayList<PayInformation>) transaction.getPayees();
@@ -92,23 +93,54 @@ public class BalanceRegister extends Register implements XSerializable {
 			}
 				
 		}
+		*/
+		
+		String public_key=	transaction.getPayer().getPublicKey();
+		Double balance = balance_list.get(public_key);
+		if(balance==null) return;
+		balance-=transaction.getPayer().getAmount();
+		for(PayInformation p: transaction.getPayees())
+		{
+			
+			
+			
+			
+			
+			
+			public_key=p.getPublicKey();
+			balance = balance_list.get(public_key);
+			if(balance==null) 
+			{
+					balance_list.put(public_key, p.getAmount());
+			}
+			else
+			{
+				balance+=p.getAmount();
+			}
+		}
 		
 	}
 	
-	
-	
-	public void addPrize()
+	public void update(Prize prize)
 	{
-		String public_key=AsymetricCipherManager.getInstance().getPublicKeyAsString();
-		Double amount = balance_list.get(public_key);
-		if(amount==null)
+		Double balance;
+		String public_key;
+		for(PayInformation p: prize.getPayees())
 		{
-			addNewPeer(new PayInformation(public_key, 2*Ledger.PRIZE));
-			return;
+			public_key=p.getPublicKey();
+			balance = balance_list.get(public_key);
+			if(balance==null) 
+			{
+					balance_list.put(public_key, p.getAmount());
+			}
+			else
+			{
+				balance+=p.getAmount();
+			}
 		}
-		amount=amount+2*Ledger.PRIZE;
-			
 	}
+	
+	
 	public void addNewPeer(PayInformation pay_information)
 	{
 		balance_list.put(pay_information.getPublicKey(), pay_information.getAmount());
@@ -182,9 +214,11 @@ public class BalanceRegister extends Register implements XSerializable {
 			
 		
 		ArrayList<Transaction> transactions = (ArrayList<Transaction>) block.getTransactions();
-		for(Transaction t:transactions)
+		Prize prize = block.getPrize();
+		update(prize);
+		for(int i=0; i<transactions.size(); i++)
 		{
-			update(t);
+			update(transactions.get(i));
 		}
 		
 		}catch(NotEnoughMoneyException e)
