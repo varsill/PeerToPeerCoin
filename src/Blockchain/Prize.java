@@ -5,7 +5,6 @@ import java.util.List;
 public class Prize  extends Parcel implements XSerializable {
 
 	protected List<PayInformation> payees_list = null; 
-	protected PayInformation payer = null;
 
 
 	public Prize()
@@ -24,7 +23,6 @@ public class Prize  extends Parcel implements XSerializable {
 
 	public void addPayer(String public_key, double amount)
 	{
-		payer = new PayInformation(public_key, amount);
 		this.public_key=public_key;
 		this.time=System.currentTimeMillis();
 	}
@@ -56,10 +54,6 @@ public class Prize  extends Parcel implements XSerializable {
 		return null;
 	}
 
-	public PayInformation getPayer()
-	{
-		return payer;
-	}
 
 	@Override
 	public String[] getListOfObjectNames() {

@@ -83,7 +83,7 @@ public class EntryBuilder extends Entry implements Builder {
 			}
 
 
-			public void setData(String public_key, String IP, double hash_rate)
+			public void createEntryFromScratch(String public_key, String IP, double hash_rate)
 			{
 				this.public_key=public_key;
 				this.hash_rate=hash_rate;

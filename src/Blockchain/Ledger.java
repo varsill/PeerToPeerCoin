@@ -13,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import Builders.BlockBuilder;
+import Builders.EntryBuilder;
 import Builders.PrizeBuilder;
 import Builders.TransactionBuilder;
 import Communication.P2PConnection;
@@ -25,6 +26,9 @@ import Builders.PrizeBuilder;
 
 public class Ledger implements Configurable {
 	
+	private static final String IP = null;
+	private String public_key;
+	private double hash_rate;
 	private ArrayList<Block> list_of_blocks = null; 
 	private String path_to_blockchain="";
 	private String path_to_balance_register="";
@@ -32,7 +36,6 @@ public class Ledger implements Configurable {
 	private ActivePeersRegister active_peers_register = null;
 	private BalanceRegister balance_register = null;
 	private ArrayList<Parcel> unprocessed_parcels=null;
-	private ArrayList<Peer> previous_network_state=null;
 	private int T=0;
 	public static double PRIZE = 2*10;// 10 coins for miner who has mined the block and 10 coins for rest of the miners, proportionally for their effort in minning the previous block
 	AsymetricCipherManager asymetric_cipher_manager=null;
@@ -46,26 +49,13 @@ public class Ledger implements Configurable {
 				unprocessed_parcels=new ArrayList<Parcel>();
 				asymetric_cipher_manager=AsymetricCipherManager.getInstance();
 				T=10 * 60; //10 min in seconds
-				//DO USUNIECIA
-				
-				
-				
-				
-				previous_network_state=new ArrayList<Peer>();
-				previous_network_state.add(new Peer("192.54.53.4", 100, "dupa_blada"));
-				previous_network_state.add(new Peer("192.6.51.44", 300, "chuj_wam_w_dupe"));
-				previous_network_state.add(new Peer("145.63.56.4", 560, "i tobie tez"));
-				
-				
-				
-				
+				hash_rate=100;
+				public_key=asymetric_cipher_manager.getPublicKeyAsString();
 				
 				
 				configure();
-				loadLastBlock();
-				loadActivePeersRegisterFromFile();
-				loadBalanceRegisterFromFile();
-				System.out.println("Last block has been loaded");
+				loadNetwork();
+				
 			}
 			
 				
@@ -81,6 +71,26 @@ public class Ledger implements Configurable {
 			}
 			
 	//REST
+			
+			public void loadNetwork()
+			{
+				loadLastBlock();
+				loadActivePeersRegisterFromFile();
+				loadBalanceRegisterFromFile();
+				System.out.println("Network has been loaded");
+			}
+			
+			
+			public void saveNetwork()
+			{
+				writeActivePeersRegisterToFile();
+				writeBalanceRegisterToFile();
+				for(Block b:list_of_blocks)
+				{
+					writeBlockToFile(b);
+				}
+			}
+			
 			@Override
 			public void configure()
 			{
@@ -89,6 +99,8 @@ public class Ledger implements Configurable {
 				{
 					properties.load(new FileInputStream(PropertiesManager.PATH_TO_PROPERTIES_FILE));
 					path_to_blockchain = properties.getProperty("PATH_TO_BLOCKCHAIN");
+					path_to_active_peers_register = properties.getProperty("PATH_TO_ACTIVE_PEERS_REGISTER");
+					path_to_balance_register = properties.getProperty("PATH_TO_BALANCE_REGISTER");
 					
 				}
 				catch(Exception e)
@@ -123,7 +135,7 @@ public class Ledger implements Configurable {
 			
 			//GET
 			
-			private Block getLastBlock() 
+			public Block getLastBlock() 
 			{
 				if(list_of_blocks==null||list_of_blocks.size()==0) return null;
 				return list_of_blocks.get(list_of_blocks.size()-1);
@@ -170,9 +182,9 @@ public class Ledger implements Configurable {
 			{
 				BlockBuilder builder = BlockBuilder.getInstance();
 				Block previous_block = getLastBlock();
-				builder.createBlockFromScratch(previous_block.getID(), getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
+				builder.createBlockFromScratch(previous_block.getID()+1, getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
 				PrizeBuilder prize_builder = PrizeBuilder.getInstance();
-				prize_builder.createPrizeFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString());
+				prize_builder.createPrizeFromScratch();
 				prize_builder.prepareNew();
 				Prize prize=null;
 				try {
@@ -228,7 +240,7 @@ public class Ledger implements Configurable {
 			{
 				try
 				{
-					this.unprocessed_parcels.add(prize);
+					this.unprocessed_parcels.add(0, prize);
 					
 				}
 				catch(Exception e)
@@ -250,6 +262,19 @@ public class Ledger implements Configurable {
 			
 			}
 			
+			public void addEntry()
+			{
+				EntryBuilder entry_builder = EntryBuilder.getInstance();
+				entry_builder.createEntryFromScratch(public_key, IP, hash_rate);
+				entry_builder.prepareNew();
+				try {
+					Entry entry = (Entry) entry_builder.createPart();
+					addEntry(entry);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					DebugManager.alert(e);
+				}
+			}
 			
 			
 			public void addExit(Exit exit)
@@ -268,7 +293,7 @@ public class Ledger implements Configurable {
 			
 			
 
-			public boolean addBlock(Block block)
+			public boolean updateNetworkWithBlock(Block block)
 			{
 				
 				if(BlockBuilder.getInstance(block).isReady())
@@ -323,9 +348,9 @@ public class Ledger implements Configurable {
 			}
 			
 			
+		
 			
-			
-			private boolean writeBlockToFile(Block block)
+			public boolean writeBlockToFile(Block block)
 			{
 				try
 				{
@@ -432,7 +457,7 @@ public class Ledger implements Configurable {
 			{
 				Block block = readBlockFromString(s);
 				if(block==null) return false;
-				addBlock(block);
+				updateNetworkWithBlock(block);
 				return true;
 			}
 			
@@ -464,25 +489,40 @@ public class Ledger implements Configurable {
 			{
 				File directory = new File(path_to_blockchain);
 				if(!directory.isDirectory()) return false;
-				String[] file_names = directory.list();
-				int max_number = 0;
+				String[] file_names_array = directory.list();
 				
-				for(int i=0; i<file_names.length; i++)
+				ArrayList<String> file_names = new ArrayList<String>();
+				
+				for(String s: file_names_array)
 				{
-					String number_chars = file_names[i].substring(file_names[i].indexOf('#')+1, file_names[i].indexOf('.'));
+					if(s.contains("#"))
+					{
+						file_names.add(s);
+					}
+					
+				}
+				
+				
+				int max_number = -1;
+				
+				for(int i=0; i<file_names.size(); i++)
+				{
+					String number_chars = file_names.get(i).substring(file_names.get(i).indexOf('#')+1, file_names.get(i).indexOf('.'));
 					int number = Integer.parseInt(number_chars);
 					if(number>max_number) max_number=number;
 					}
 				
 				try
 				{
-					addBlock(readBlockFromFile(new File(path_to_blockchain+"/block#"+max_number+".blo")));
+					if(max_number==-1) return false;
+					list_of_blocks.add(readBlockFromFile(new File(path_to_blockchain+"/block#"+max_number+".blo")));
+					return true;
 				} 
 				catch (Exception e) 
 				{
 					DebugManager.alert(e);
 				}
-				return true;
+				return false;
 			}
 			
 			

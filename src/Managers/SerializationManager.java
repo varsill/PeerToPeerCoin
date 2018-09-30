@@ -34,6 +34,7 @@ public class SerializationManager {
 		
 		else 
 			{
+			if((!string.contains(beginning_expression))||(!string.contains(end_expression))) return new String[0];
 			proper_string=string.substring(string.indexOf(beginning_expression)+beginning_expression.length(), string.indexOf(end_expression));
 			}
 		

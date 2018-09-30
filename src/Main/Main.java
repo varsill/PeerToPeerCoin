@@ -22,10 +22,12 @@ import Blockchain.Exit;
 import Blockchain.Ledger;
 import Blockchain.Parcel;
 import Blockchain.PayInformation;
+import Blockchain.Prize;
 import Blockchain.Transaction;
 import Builders.BlockBuilder;
 import Builders.EntryBuilder;
 import Builders.ExitBuilder;
+import Builders.PrizeBuilder;
 import Builders.TransactionBuilder;
 import Communication.P2PConnection;
 import Managers.DebugManager;
@@ -95,7 +97,7 @@ public class Main {
 		
 		EntryBuilder entbuilder = EntryBuilder.getInstance();
 		
-		entbuilder.setData(asym.getPublicKeyAsString(), "124.13.41.123", 421.41);
+		entbuilder.createEntryFromScratch(asym.getPublicKeyAsString(), "124.13.41.123", 421.41);
 		entbuilder.prepareNew();
 		BlockBuilder block_builder = BlockBuilder.getInstance();
 		
@@ -270,40 +272,68 @@ public class Main {
 				System.out.println(s);
 		}
 		
+
+		
+		
+		*/	
+		/*	Ledger ledger = Ledger.getInstance();
+				ledger.addEntry();
+		Block b =ledger.createBlock();
+		ledger.updateNetworkWithBlock(b);
+		ledger.saveNetwork();
+	*/		
+	/*
+		BlockBuilder block_builder = BlockBuilder.getInstance();
+		block_builder.createBlockFromScratch(0, 10, "GENESIS");
+		
+		EntryBuilder entry_builder = EntryBuilder.getInstance();
+		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "192.168.0.73", 100);
+		entry_builder.prepareNew();
+		Entry entry = (Entry) entry_builder.createPart();
+		block_builder.addParcel(entry);
+		
+		PrizeBuilder prize_builder = PrizeBuilder.getInstance();
+		prize_builder.createPrizeFromScratch();
+		prize_builder.prepareNew();
+		Prize prize = (Prize)prize_builder.createPart();
+		block_builder.addParcel(prize);		
+		
+		
+		block_builder.prepareNew();
+		
+		Block block = (Block) block_builder.createPart();
+		
+		Ledger.getInstance().updateNetworkWithBlock(block);
+		Ledger.getInstance().saveNetwork();
 	*/	
 		
-		
-			
+		//GETBYTES charset problem!
+	
 		Ledger ledger = Ledger.getInstance();
-		ledger.
+		EntryBuilder entry_builder = EntryBuilder.getInstance();
 		
 		
+		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "129.56.43.1", 413);
+		entry_builder.prepareNew();
+		Entry entry = (Entry)entry_builder.createPart();
+		ledger.addEntry(entry);
+		
+		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "169.16.46.41", 413);
+		entry_builder.prepareNew();
+		 entry = (Entry)entry_builder.createPart();
+		ledger.addEntry(entry);
+		
+		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "15.16.59.51", 413);
+		entry_builder.prepareNew();
+		entry = (Entry)entry_builder.createPart();
+		ledger.addEntry(entry);
 		
 		
+		Block block =ledger.createBlock();
+		ledger.updateNetworkWithBlock(block);
 		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
-		
+		ledger.saveNetwork();
+	
 		
 		
 	

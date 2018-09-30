@@ -11,6 +11,7 @@ import Blockchain.BalanceRegister;
 import Blockchain.Block;
 import Blockchain.Entry;
 import Blockchain.Exit;
+import Blockchain.Ledger;
 import Blockchain.Parcel;
 import Blockchain.Prize;
 import Blockchain.Transaction;
@@ -83,7 +84,7 @@ public class BlockBuilder extends Block implements  Builder {
 			info = SerializationManager.makeSubstrings(s,  "<Blockchain.Prize>", "</Blockchain.Prize>","&");
 			PrizeBuilder prize_builder = PrizeBuilder.getInstance();
 			prize_builder.loadPartFromString(info[0]);
-			addParcel((PrizeBuilder)prize_builder.createPart());
+			addParcel((Prize)prize_builder.createPart());
 			
 			
 		//Transactions
@@ -149,8 +150,6 @@ public class BlockBuilder extends Block implements  Builder {
 		if(merkle_root==null) return false;
 		if(!isHashProper()) return false;
 		if(list_of_parcels.size()==0) return false;
-		Prize prize = (Prize) list_of_parcels.get(0);
-		if(!prize.getClass().equals(Prize.class)) return false;
 		
 		
 		return true;

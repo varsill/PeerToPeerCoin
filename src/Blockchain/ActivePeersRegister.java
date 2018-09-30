@@ -7,7 +7,7 @@ import java.util.Set;
 import Managers.DebugManager;
 import Managers.SerializationManager;
 
-public class ActivePeersRegister extends Register implements XSerializable {
+public class ActivePeersRegister extends Register implements XSerializable, Cloneable {
 	
 	private Hashtable<String, Peer> list_of_peers=null;
 	private double hash_rate=0;
@@ -202,6 +202,10 @@ public class ActivePeersRegister extends Register implements XSerializable {
 			return null;
 		}
 	}
+	@Override
+	public Object clone() throws CloneNotSupportedException {
+        return super.clone();
+    }
 }
 
 

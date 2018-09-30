@@ -11,6 +11,7 @@ import Blockchain.Prize;
 import Blockchain.Transaction;
 import Managers.DebugManager;
 import Managers.SerializationManager;
+import Security.AsymetricCipherManager;
 
 public class PrizeBuilder extends Prize implements Builder {
 	private ActivePeersRegister previous_network_state = null;
@@ -51,7 +52,7 @@ public class PrizeBuilder extends Prize implements Builder {
 	 public Object createPart() throws Exception
 	{
 		
-		if(!isReady()) throw new Exception("Couldn't create transaction");
+		if(!isReady()) throw new Exception("Couldn't create prize");
 		Prize result = new Prize(this);
 		return result;
 		
@@ -63,7 +64,6 @@ public class PrizeBuilder extends Prize implements Builder {
 	{
 		if(signature==null) return false;
 		if(public_key==null) return false;
-		if(payer==null) return false;
 		if(time==-1) return false;
 		if(!isSignatureValid()) return false;
 		if(!isPrizeValid()) return false;
@@ -77,7 +77,6 @@ public class PrizeBuilder extends Prize implements Builder {
 	{
 		 signature=null;
 		 public_key=null;
-		 payer=null;
 		 payees_list=new ArrayList<PayInformation>();
 		
 		 time=-1;
@@ -130,10 +129,19 @@ public class PrizeBuilder extends Prize implements Builder {
 	
 	private boolean isPrizeValid()
 	{
-		ArrayList<PayInformation> payees = (ArrayList<PayInformation>) getPayees();
+		if(previous_network_state==null) 
+		{
+			if(payees_list.size()!=1) return false;
+			PayInformation p = payees_list.get(0);
+			if(p.getAmount()!=Ledger.PRIZE) return false;
+			return true;
+		}
+		
 		double total_previous_hash_rate=previous_network_state.getNetworksHashRate();
 		double prize;
-		for(PayInformation p:payees)
+		
+	
+		for(PayInformation p:payees_list)
 		{
 			prize=p.getAmount();
 			if(p.getPublicKey()==this.public_key) prize-=Ledger.PRIZE;
@@ -143,10 +151,11 @@ public class PrizeBuilder extends Prize implements Builder {
 	}
 	
 	
-	public void createPrizeFromScratch(String public_key)
+	public void createPrizeFromScratch()
 	{
-		
+		this.public_key=AsymetricCipherManager.getInstance().getPublicKeyAsString();
 		addPayee(public_key, Ledger.PRIZE);
+		if(previous_network_state==null)return;
 		ArrayList<Peer> list = previous_network_state.getPeersList();
 		double prize;
 		for(Peer p: list)

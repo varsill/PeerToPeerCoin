@@ -164,7 +164,8 @@ public class Block implements XSerializable
 	
 	public boolean isHashProper()
 	{
-		return isHashProper(new String(hash_manager.digest(createString())));
+		String s = createString();
+		return isHashProper(new String(hash_manager.digest(s)));
 	}
 	
 	
@@ -222,7 +223,7 @@ public class Block implements XSerializable
 		
 		for(Parcel p:list_of_parcels)
 		{
-			if(p.getClass().equals(Exit.class))
+			if(p.getClass().equals(Prize.class))
 			{
 				return (Prize) p;
 			}
