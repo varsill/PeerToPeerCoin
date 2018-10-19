@@ -1,6 +1,7 @@
 package Builders;
 
 import Blockchain.Entry;
+import Managers.SerializationManager;
 
 public class EntryBuilder extends Entry implements Builder {
 	//Singleton
@@ -37,7 +38,7 @@ public class EntryBuilder extends Entry implements Builder {
 			@Override
 			public Object createPart() throws Exception {
 				
-				if(!isReady()) throw new Exception("Couldn't build Entry");
+				isReady();
 				Entry result = new Entry((Entry)this);
 				reset();
 				return result;
@@ -46,7 +47,7 @@ public class EntryBuilder extends Entry implements Builder {
 
 			@Override
 			public void loadPartFromString(String s) throws Exception {
-				String[] information=s.split(";");
+				String[] information=s.split(SerializationManager.SEPARATOR);
 				if(information.length!=5) throw new Exception("Couldn't build Exit");
 					
 					this.IP=information[0];
@@ -71,15 +72,15 @@ public class EntryBuilder extends Entry implements Builder {
 
 
 			@Override
-			public boolean isReady() {
+			public void isReady() throws Exception{
 			
-				if(signature==null) return false;
-				if(public_key==null) return false;
-				if(time==-1) return false;
-				if(!isSignatureValid()) return false;
-				if(hash_rate==-1) return false;
-				if(IP==null) return false;
-				return true;
+				if(signature==null) throw new Exception("Signature is not set");
+				if(public_key==null) throw new Exception("Public Key is not set");
+				if(time==-1) throw new Exception("Time is not set");
+				if(!isSignatureValid()) throw new Exception("Signature is invalid");
+				if(hash_rate==-1) throw new Exception("Hashrate is not set");
+				if(IP==null) throw new Exception("IP is not set");
+				
 			}
 
 

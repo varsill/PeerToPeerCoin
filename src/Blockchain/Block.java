@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.ObjectInputStream;
 import java.io.Serializable;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -91,21 +92,39 @@ public class Block implements XSerializable
 	{
 		
 		if(hash_manager==null) hash_manager = new HashManager();
-		return new String(hash_manager.digest(createString()));
+		try {
+			return new String(hash_manager.digest(createString()), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	protected String digest(String msg)
 	{
 		
 		if(hash_manager==null) hash_manager = new HashManager();
-		return new String(hash_manager.digest(msg));
+		try {
+			return new String(hash_manager.digest(msg), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	
 	public String getHash()
 	{
 		if(hash_manager==null) hash_manager = new HashManager();
-		return new String(hash_manager.digest(createString()));
+		try {
+			return new String(hash_manager.digest(createString()), "UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	public void proof()
@@ -143,7 +162,13 @@ public class Block implements XSerializable
 	
 	protected boolean isHashProper(String hash)
 	{
-		byte[] array_of_hashs_bytes = hash.getBytes();
+		byte[] array_of_hashs_bytes = new byte[0];
+		try {
+			array_of_hashs_bytes = hash.getBytes("UTF-8");
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		int number_of_full_bytes = difficulty/8;
 		int rest_bits = difficulty%8;
 		if(number_of_full_bytes>array_of_hashs_bytes.length) return false;
@@ -165,7 +190,13 @@ public class Block implements XSerializable
 	public boolean isHashProper()
 	{
 		String s = createString();
-		return isHashProper(new String(hash_manager.digest(s)));
+		try {
+			return isHashProper(new String(hash_manager.digest(s), "UTF-8"));
+		} catch (UnsupportedEncodingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return false;
 	}
 	
 	

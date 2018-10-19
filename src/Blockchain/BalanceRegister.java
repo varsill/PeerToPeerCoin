@@ -154,7 +154,7 @@ public class BalanceRegister extends Register implements XSerializable {
 		
 		for(String x: string_array)
 		{
-			String[] string_array2=SerializationManager.makeSubstrings(x, "#BEGIN", "#END", ";");
+			String[] string_array2=SerializationManager.makeSubstrings(x, "#BEGIN", "#END",SerializationManager.SEPARATOR);
 			if(string_array2.length!=2) throw new Exception("Wrong number of parameters. Couldn't create BlockRegister from string");
 			balance_list.put(string_array2[0], Double.parseDouble(string_array2[1]));
 		}

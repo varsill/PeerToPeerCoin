@@ -159,7 +159,7 @@ public class P2PConnection implements Runnable {
 						{
 							buffer = new byte[num_read];
 							System.arraycopy(bb.array(), 0, buffer, 0, num_read);
-							result = new String(buffer);
+							result = new String(buffer, "UTF-8");
 							String ip = socket_channel.getRemoteAddress().toString();
 							ip=ip.substring(1, ip.indexOf(":"));
 							//System.out.println(result+"KONIEC");
@@ -210,12 +210,12 @@ public class P2PConnection implements Runnable {
 							
 						
 						msg=msgs.get(0);
-						buffer = ByteBuffer.wrap(msg.getBytes());
+						buffer = ByteBuffer.wrap(msg.getBytes("UTF-8"));
 						socket_channel.write(buffer);
 						msgs.remove(0);
 						if(buffer.hasRemaining())
 						{
-							if(buffer.hasArray()) msgs.add(0, new String(buffer.array()));
+							if(buffer.hasArray()) msgs.add(0, new String(buffer.array(), "UTF-8"));
 						}
 						}
 					}

@@ -55,7 +55,7 @@ public class TransactionBuilder extends Transaction implements Builder {
 	 public Object createPart() throws Exception
 	{
 		
-		if(!isReady()) throw new Exception("Couldn't create transaction");
+		isReady();
 		Transaction result = new Transaction(this);
 		return result;
 		
@@ -63,23 +63,19 @@ public class TransactionBuilder extends Transaction implements Builder {
 
 	
 	@Override
-	 public boolean isReady()
+	 public void isReady() throws Exception
 	{
-		if(signature==null) return false;
-		if(public_key==null) return false;
-		if(payer==null) return false;
-		if(time==-1) return false;
+		if(signature==null) throw new Exception("Signature is not set");
+		if(public_key==null) throw new Exception("Public Key is not set");
+		if(payer==null) throw new Exception("Payer is not set");
+		if(time==-1) throw new Exception("Time is not set");
+			
+		if(payer.getAmount()>BalanceRegister.getInstance().getBalanceAsDoubleByAddress(payer.getPublicKey()))throw new Exception("Payer does not have the money he considers himself to have");
+			
 		
-			try {
-				if(payer.getAmount()>BalanceRegister.getInstance().getBalanceAsDoubleByAddress(payer.getPublicKey())) return false;
-			} catch (Exception e) {
-				DebugManager.alert(e);
-				return false;
-			}
+		if(total_amount>(payer.getAmount())) throw new Exception("Payer does not have enough money");
+		if(!isSignatureValid()) throw new Exception("Signature is invalid");
 		
-		if(total_amount>(payer.getAmount())) return false;
-		if(!isSignatureValid()) return false;
-		return true;
 	}
 	
 	
@@ -106,7 +102,7 @@ public class TransactionBuilder extends Transaction implements Builder {
 
 	@Override
 	public void loadPartFromString(String s) throws Exception {
-		String[] information=SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain.PayInformation>", ";");
+		String[] information=SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain.PayInformation>", SerializationManager.SEPARATOR);
 		if(information.length!=3) return;
 			
 			this.public_key=information[0];
@@ -121,7 +117,7 @@ public class TransactionBuilder extends Transaction implements Builder {
 		String[] parts_of_transaction;
 		for(String x:string_array)
 		{
-			parts_of_transaction = x.split(";");
+			parts_of_transaction = x.split(SerializationManager.SEPARATOR);
 			if(parts_of_transaction.length!=2) throw new Exception("Wrong number of parameters. Couldn't create transaction");
 			public_key=parts_of_transaction[0];
 			amount = Double.parseDouble(parts_of_transaction[1]);

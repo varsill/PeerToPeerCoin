@@ -12,7 +12,7 @@ import Builders.BlockBuilder;
 
 public class SerializationManager {
 
-	
+	public static String SEPARATOR = ";sep;";
 	
 	
 	static public String[] makeSubstrings(String string, String beginning_expression, String end_expression, String splitting_exp)
@@ -48,7 +48,7 @@ public class SerializationManager {
 			{
 				
 				array_list.add(proper_string.substring(0, i));
-				proper_string=proper_string.substring(i+1) ;
+				proper_string=proper_string.substring(i+SEPARATOR.length()) ;
 			}
 			array_list.add(proper_string);
 			
@@ -118,16 +118,17 @@ public class SerializationManager {
 				result=result.append(Double.toString(d));
 			}
 			else	throw new Exception("Unknow type of field");
-			result.append(";");
+			result.append(SEPARATOR);
 			}
 			
 		}
 		
 		}
 		
-		if(result.length()>0&&result.charAt(result.length()-1)==';') 
+		
+		if(result.length()>SEPARATOR.length())
 		{
-			result=result.delete(result.length()-1, result.length());
+			result=result.delete(result.lastIndexOf(SEPARATOR), result.length());
 		}
 		
 		XSerializable[] object_list = x.getObjectList();

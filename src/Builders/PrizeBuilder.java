@@ -52,7 +52,13 @@ public class PrizeBuilder extends Prize implements Builder {
 	 public Object createPart() throws Exception
 	{
 		
-		if(!isReady()) throw new Exception("Couldn't create prize");
+		try
+		{
+			isReady();
+		}catch(Exception e)
+		{
+			throw new Exception("Couldn't create prize");
+		}
 		Prize result = new Prize(this);
 		return result;
 		
@@ -60,15 +66,15 @@ public class PrizeBuilder extends Prize implements Builder {
 
 	
 	@Override
-	 public boolean isReady()
+	 public void isReady() throws Exception
 	{
-		if(signature==null) return false;
-		if(public_key==null) return false;
-		if(time==-1) return false;
-		if(!isSignatureValid()) return false;
-		if(!isPrizeValid()) return false;
+		if(signature==null) throw new Exception("Signature is not set");
+		if(public_key==null) throw new Exception("Public Key is not set");
+		if(time==-1) throw new Exception("Time is not set");
+		if(!isSignatureValid()) throw new Exception("Signature is invalid");
+		if(!isPrizeValid())throw new Exception("Prize is invalid");
 		
-		return true;
+	
 	}
 	
 	
@@ -93,7 +99,7 @@ public class PrizeBuilder extends Prize implements Builder {
 
 	@Override
 	public void loadPartFromString(String s) throws Exception {
-		String[] information=SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain.PayInformation>", ";");
+		String[] information=SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain.PayInformation>", SerializationManager.SEPARATOR);
 		if(information.length!=3) return;
 			
 			this.public_key=information[0];
@@ -107,7 +113,7 @@ public class PrizeBuilder extends Prize implements Builder {
 		String[] parts_of_transaction;
 		for(String x:string_array)
 		{
-			parts_of_transaction = x.split(";");
+			parts_of_transaction = x.split(SerializationManager.SEPARATOR);
 			if(parts_of_transaction.length!=2) throw new Exception("Wrong number of parameters. Couldn't create transaction");
 			public_key=parts_of_transaction[0];
 			amount = Double.parseDouble(parts_of_transaction[1]);

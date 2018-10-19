@@ -1,5 +1,4 @@
- package Blockchain;
-
+package Blockchain;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -78,6 +77,7 @@ public class Ledger implements Configurable {
 				loadActivePeersRegisterFromFile();
 				loadBalanceRegisterFromFile();
 				System.out.println("Network has been loaded");
+				
 			}
 			
 			
@@ -182,7 +182,8 @@ public class Ledger implements Configurable {
 			{
 				BlockBuilder builder = BlockBuilder.getInstance();
 				Block previous_block = getLastBlock();
-				builder.createBlockFromScratch(previous_block.getID()+1, getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
+				if(previous_block==null) builder.createBlockFromScratch(0, 1, "#GENESIS");
+				else builder.createBlockFromScratch(previous_block.getID()+1, getDifficulty(active_peers_register.getNetworksHashRate()), previous_block.getHash());
 				PrizeBuilder prize_builder = PrizeBuilder.getInstance();
 				prize_builder.createPrizeFromScratch();
 				prize_builder.prepareNew();
@@ -295,9 +296,15 @@ public class Ledger implements Configurable {
 
 			public boolean updateNetworkWithBlock(Block block)
 			{
-				
-				if(BlockBuilder.getInstance(block).isReady())
+				try
 				{
+					BlockBuilder.getInstance(block).isReady();
+				}catch(Exception e)
+				{
+					DebugManager.alert(e);
+					return false;
+				}
+				
 					try
 					{
 					if(getLastBlock()==null)
@@ -325,8 +332,8 @@ public class Ledger implements Configurable {
 						DebugManager.alert(e);
 						return false;
 					}
-				}
-				return false;
+				
+				
 			}
 			
 		
@@ -359,7 +366,7 @@ public class Ledger implements Configurable {
 				String path = path_to_blockchain+"/block#"+Integer.toString(block.getID())+".blo";
 				FileOutputStream fos = new FileOutputStream(path);
 				String s = SerializationManager.saveObjectToString(block);
-				byte b[] =s.getBytes();
+				byte b[] =s.getBytes("UTF-8");
 				fos.write(b);
 				fos.close();
 				return true;
@@ -377,7 +384,7 @@ public class Ledger implements Configurable {
 				{
 				if(this.balance_register==null) return false;
 				FileOutputStream fos = new FileOutputStream(path_to_balance_register);
-				fos.write(balance_register.saveToString().getBytes());
+				fos.write(balance_register.saveToString().getBytes("UTF-8"));
 				fos.close();
 				}catch(Exception e)
 				{
@@ -395,7 +402,7 @@ public class Ledger implements Configurable {
 				{
 				if(this.active_peers_register==null) return false;
 				FileOutputStream fos = new FileOutputStream(path_to_active_peers_register);
-				fos.write(active_peers_register.saveToString().getBytes());
+				fos.write(active_peers_register.saveToString().getBytes("UTF-8"));
 				fos.close();
 				}catch(Exception e)
 				{
@@ -436,7 +443,7 @@ public class Ledger implements Configurable {
 					{
 						b=new byte[x];
 						fis.read(b);
-						s+=new String(b);
+						s+=new String(b, "UTF-8");
 					}
 				fis.close();
 				
@@ -470,7 +477,7 @@ public class Ledger implements Configurable {
 					FileInputStream fis = new FileInputStream(path_to_balance_register);
 					byte[] b = new byte[fis.available()];
 					fis.read(b);
-					String s = new String(b);
+					String s = new String(b, "UTF-8");
 					balance_register.loadRegisterFromString(s);					
 					fis.close();
 				
@@ -534,7 +541,7 @@ public class Ledger implements Configurable {
 					FileInputStream fis = new FileInputStream(path_to_active_peers_register);
 					byte[] b = new byte[fis.available()];
 					fis.read(b);
-					String s = new String(b);
+					String s = new String(b, "UTF-8");
 					active_peers_register.loadRegisterFromString(s);					
 					fis.close();
 				

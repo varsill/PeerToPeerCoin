@@ -2,6 +2,7 @@ package Builders;
 
 import Blockchain.Entry;
 import Blockchain.Exit;
+import Managers.SerializationManager;
 
 public class ExitBuilder extends Exit implements Builder {
 	
@@ -38,7 +39,7 @@ public class ExitBuilder extends Exit implements Builder {
 
 			@Override
 			public Object createPart() throws Exception {
-				if(!isReady()) throw new Exception("Couldn't build Entry");
+				isReady();
 				Exit result = new Exit((Exit)this);
 				reset();
 				return result;
@@ -47,7 +48,7 @@ public class ExitBuilder extends Exit implements Builder {
 			
 			public Object createPart(String public_key) throws Exception {
 				this.public_key=public_key;
-				if(!isReady()) throw new Exception("Couldn't build Entry");
+				isReady();
 				Exit result = new Exit((Exit)this);
 				reset();
 				return result;
@@ -56,7 +57,7 @@ public class ExitBuilder extends Exit implements Builder {
 
 			@Override
 			public void loadPartFromString(String s) throws Exception {
-				String[] info=s.split(";");
+				String[] info=s.split(SerializationManager.SEPARATOR);
 				
 					if(info.length!=3) throw new Exception("Wrong number of arguments to loadPartFromString");
 					this.public_key=info[0];
@@ -78,14 +79,14 @@ public class ExitBuilder extends Exit implements Builder {
 
 
 			@Override
-			public boolean isReady() {
+			public void isReady() throws Exception{
 				
-				if(signature==null) return false;
-				if(public_key==null) return false;
-				if(time==-1) return false;
-				if(!isSignatureValid()) return false;	
+				if(signature==null) throw new Exception("Signature is not set");
+				if(public_key==null) throw new Exception("Public Key is not set");
+				if(time==-1) throw new Exception("Time is not set");
+				if(!isSignatureValid()) throw new Exception("Signature is invalid");
 				
-				return true;
+				
 			}
 			
 

@@ -56,7 +56,7 @@ public class BlockBuilder extends Block implements  Builder {
 	@Override
 	public Object createPart() throws Exception 
 	{
-		if(!isReady())throw new Exception("Couldn't build block");
+		isReady();
 		Block result = new Block((Block)this);
 		return  result;
 		
@@ -69,7 +69,7 @@ public class BlockBuilder extends Block implements  Builder {
 		try
 		{
 		//Main block stuff
-			String[] info = SerializationManager.makeSubstrings(s, "#BEGIN", "<", ";");
+			String[] info = SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain", SerializationManager.SEPARATOR);
 			if(info.length!=5)
 			{
 				return;
@@ -138,21 +138,20 @@ public class BlockBuilder extends Block implements  Builder {
 	
 	
 	@Override
-	public boolean isReady()
+	public void isReady() throws Exception
 	{
 	
-		if(nonce==-1) return false;
-		if(list_of_parcels==null) return false;
-		if(difficulty==-1) return false;
-		if(previous_hash == null) return false;
-		if(ID==-1) return false;
-		if(time==-1) return false;
-		if(merkle_root==null) return false;
-		if(!isHashProper()) return false;
-		if(list_of_parcels.size()==0) return false;
+		if(nonce==-1) throw new Exception("Nonce is not set");
+		if(list_of_parcels==null) throw new Exception("List of parcels is not set");
+		if(difficulty==-1) throw new Exception("Difficulty is not set");
+		if(previous_hash == null) throw new Exception("Previous hash is not set");
+		if(ID==-1) throw new Exception("ID is not set");
+		if(time==-1) throw new Exception("Time is not set");
+		if(merkle_root==null) throw new Exception("Merkle root is not set");
+		if(!isHashProper()) throw new Exception("Hash is inproper");
+		if(list_of_parcels.size()==0) throw new Exception("List of parcels is empty");
 		
-		
-		return true;
+	
 		
 	}
 

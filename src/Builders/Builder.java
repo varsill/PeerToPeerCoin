@@ -10,7 +10,7 @@ public interface Builder {
 	
 	 public void reset();
 
-	 public boolean isReady();
+	 public void isReady() throws Exception;
 
 	 public void prepareNew();
 }

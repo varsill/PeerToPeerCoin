@@ -124,7 +124,7 @@ public class ActivePeersRegister extends Register implements XSerializable, Clon
 		
 		for(String x: string_array)
 		{
-			String[] string_array2 = SerializationManager.makeSubstrings(x, "#BEGIN", "#END", ";");
+			String[] string_array2 = SerializationManager.makeSubstrings(x, "#BEGIN", "#END", SerializationManager.SEPARATOR);
 			if(string_array2.length!=3) throw new Exception("Wrong number of parameters. Couldn't create ActivePeersRegister from string");
 			 double hash_rate =Double.parseDouble(string_array2[2]);
 			list_of_peers.put(string_array2[0], new Peer(string_array2[1], hash_rate));

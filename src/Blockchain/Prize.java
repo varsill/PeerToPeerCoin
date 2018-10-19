@@ -20,14 +20,6 @@ public class Prize  extends Parcel implements XSerializable {
 		this.time=t.time;
 	}
 
-
-	public void addPayer(String public_key, double amount)
-	{
-		this.public_key=public_key;
-		this.time=System.currentTimeMillis();
-	}
-
-
 	public void addPayee(String payee_public_key, double amount)
 	{
 		if(amount<0) return;
