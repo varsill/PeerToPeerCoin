@@ -311,29 +311,13 @@ public class Main {
 	
 		Ledger ledger = Ledger.getInstance();
 		EntryBuilder entry_builder = EntryBuilder.getInstance();
-		//PrizeBuilder prize_builder = PrizeBuilder.getInstance();
-		
-		
-		
-		//prize_builder.addPayee(AsymetricCipherManager.getInstance().getPublicKeyAsString(), Ledger.PRIZE);
-	//	prize_builder.prepareNew();
-	//	Prize prize =(Prize) prize_builder.createPart();
-		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "129.56.43.1", 13);
+		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "129.56.43.1", 11);
 		entry_builder.prepareNew();
 		Entry entry = (Entry)entry_builder.createPart();
 		ledger.addEntry(entry);
 		
-		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "169.16.46.41", 13);
-		entry_builder.prepareNew();
-		 entry = (Entry)entry_builder.createPart();
-		ledger.addEntry(entry);
+	
 		
-		entry_builder.createEntryFromScratch(AsymetricCipherManager.getInstance().getPublicKeyAsString(), "15.16.59.51", 13);
-		entry_builder.prepareNew();
-		entry = (Entry)entry_builder.createPart();
-		ledger.addEntry(entry);
-		
-		//ledger.addPrize(prize);
 		
 		Block block =ledger.createBlock();
 		ledger.updateNetworkWithBlock(block);

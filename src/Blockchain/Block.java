@@ -280,7 +280,7 @@ public class Block implements XSerializable
 			{
 				s_entries+=p.getHash();
 			}
-			else if(p.getClass().equals(Entry.class))
+			else if(p.getClass().equals(Exit.class))
 			{
 				s_exits+=p.getHash();
 			}
@@ -288,7 +288,7 @@ public class Block implements XSerializable
 			{
 				s_prize+=p.getHash();
 			}
-			String s = s_trans+s_entries+s_exits+s_prize;
+			String s = s_prize+s_trans+s_entries+s_exits;
 			this.merkle_root= new String(digest(s));
 		}
 	}

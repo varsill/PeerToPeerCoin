@@ -135,7 +135,8 @@ public class BalanceRegister extends Register implements XSerializable {
 			}
 			else
 			{
-				balance+=p.getAmount();
+				balance_list.replace(public_key, balance+p.getAmount());
+			
 			}
 		}
 	}

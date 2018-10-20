@@ -73,9 +73,12 @@ public class Ledger implements Configurable {
 			
 			public void loadNetwork()
 			{
-				loadLastBlock();
 				loadActivePeersRegisterFromFile();
 				loadBalanceRegisterFromFile();
+				loadLastBlock();
+			
+				scroll();
+			
 				System.out.println("Network has been loaded");
 				
 			}
@@ -91,6 +94,10 @@ public class Ledger implements Configurable {
 				}
 			}
 			
+			public void scroll()
+			{
+				//polacz sie z innymi peerami i ogarnij od nich co sie dzialo w sieci podczas twojej nieobecnosci
+			}
 			@Override
 			public void configure()
 			{
@@ -299,6 +306,7 @@ public class Ledger implements Configurable {
 				try
 				{
 					BlockBuilder.getInstance(block).isReady();
+					System.out.println(balance_register.getBalanceByAddress(AsymetricCipherManager.getInstance().getPublicKeyAsString()));
 				}catch(Exception e)
 				{
 					DebugManager.alert(e);
@@ -480,7 +488,7 @@ public class Ledger implements Configurable {
 					String s = new String(b, "UTF-8");
 					balance_register.loadRegisterFromString(s);					
 					fis.close();
-				
+					PrizeBuilder.getInstance().saveNetworkState();
 				}catch(Exception e)
 				{
 					DebugManager.alert(e);

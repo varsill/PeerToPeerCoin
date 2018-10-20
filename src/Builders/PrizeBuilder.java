@@ -44,7 +44,6 @@ public class PrizeBuilder extends Prize implements Builder {
 	public void saveNetworkState()
 	{
 		previous_network_state = ActivePeersRegister.getInstance().getSavedActivePeersRegister();
-		
 	}
 	
 	
@@ -52,13 +51,9 @@ public class PrizeBuilder extends Prize implements Builder {
 	 public Object createPart() throws Exception
 	{
 		
-		try
-		{
-			isReady();
-		}catch(Exception e)
-		{
-			throw new Exception("Couldn't create prize");
-		}
+		
+		isReady();
+		
 		Prize result = new Prize(this);
 		return result;
 		
@@ -135,23 +130,28 @@ public class PrizeBuilder extends Prize implements Builder {
 	
 	private boolean isPrizeValid()
 	{
-		if(previous_network_state==null) 
+		PayInformation p;
+		if(previous_network_state==null||previous_network_state.getPeersList().size()==0) 
 		{
 			if(payees_list.size()!=1) return false;
-			PayInformation p = payees_list.get(0);
-			if(p.getAmount()!=Ledger.PRIZE) return false;
+			p = payees_list.get(0);
+			if(p.getAmount()!=Ledger.PRIZE/2) return false;
 			return true;
 		}
 		
 		double total_previous_hash_rate=previous_network_state.getNetworksHashRate();
 		double prize;
 		
-	
-		for(PayInformation p:payees_list)
+		p=payees_list.get(0);
+		prize=p.getAmount();
+		if(p.getAmount()!=Ledger.PRIZE/2) return false;
+		
+		for(int i=1; i<payees_list.size(); i++)
 		{
+			p=payees_list.get(i);
 			prize=p.getAmount();
-			if(p.getPublicKey()==this.public_key) prize-=Ledger.PRIZE;
-			if(previous_network_state.getHashRateByPublicKey(p.getPublicKey())/total_previous_hash_rate*Ledger.PRIZE!=prize) return false;
+			
+			if(previous_network_state.getHashRateByPublicKey(p.getPublicKey())/total_previous_hash_rate*Ledger.PRIZE/2!=prize) return false;
 		}
 		return true;
 	}
@@ -160,13 +160,13 @@ public class PrizeBuilder extends Prize implements Builder {
 	public void createPrizeFromScratch()
 	{
 		this.public_key=AsymetricCipherManager.getInstance().getPublicKeyAsString();
-		addPayee(public_key, Ledger.PRIZE);
+		addPayee(public_key, Ledger.PRIZE/2);
 		if(previous_network_state==null)return;
 		ArrayList<Peer> list = previous_network_state.getPeersList();
 		double prize;
 		for(Peer p: list)
 		{
-			prize = p.getHashRate()/previous_network_state.getNetworksHashRate()*Ledger.PRIZE;
+			prize = p.getHashRate()/previous_network_state.getNetworksHashRate()*Ledger.PRIZE/2;
 			addPayee(p.getPublicKey(), prize);
 		}
 		
