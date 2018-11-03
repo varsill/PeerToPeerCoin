@@ -102,15 +102,15 @@ public class PrizeBuilder extends Prize implements Builder {
 			this.signature=information[2];
 			
 			
-		String[] string_array = SerializationManager.makeSubstrings(s, "<Blockchain.PayInformation>", "</Blockchain.PayInformation>", "&");
+		String[] string_array = SerializationManager.makeSubstrings(s, "<Blockchain.PayInformation>", "</Blockchain.PayInformation>",  SerializationManager.ARRAY_SEPARATOR);
 		String public_key;
 		double amount;
 		String[] parts_of_transaction;
 		for(String x:string_array)
 		{
-			parts_of_transaction = x.split(SerializationManager.SEPARATOR);
-			if(parts_of_transaction.length!=2) throw new Exception("Wrong number of parameters. Couldn't create transaction");
-			public_key=parts_of_transaction[0];
+			parts_of_transaction = SerializationManager.makeSubstrings(x, "#BEGIN", "#END", SerializationManager.SEPARATOR);
+			if(parts_of_transaction.length!=2) throw new Exception("Wrong number of parameters. Couldn't create prize");
+			public_key=SerializationManager.unescape(parts_of_transaction[0]);
 			amount = Double.parseDouble(parts_of_transaction[1]);
 			addPayee(public_key, amount);
 		}

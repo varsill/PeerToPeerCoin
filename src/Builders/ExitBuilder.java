@@ -60,10 +60,10 @@ public class ExitBuilder extends Exit implements Builder {
 				String[] info=s.split(SerializationManager.SEPARATOR);
 				
 					if(info.length!=3) throw new Exception("Wrong number of arguments to loadPartFromString");
-					this.public_key=info[0];
+					this.public_key=SerializationManager.unescape(info[0]);
 					this.time=Long.parseLong(info[1]);
 				
-					this.signature=info[2];
+					this.signature=SerializationManager.unescape(info[2]);
 				
 					
 			}

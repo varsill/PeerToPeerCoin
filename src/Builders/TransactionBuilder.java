@@ -105,21 +105,21 @@ public class TransactionBuilder extends Transaction implements Builder {
 		String[] information=SerializationManager.makeSubstrings(s, "#BEGIN", "<Blockchain.PayInformation>", SerializationManager.SEPARATOR);
 		if(information.length!=3) return;
 			
-			this.public_key=information[0];
+			this.public_key=SerializationManager.unescape(information[0]);
 			addPayer(public_key, balance_register.getBalanceAsDoubleByAddress(public_key));
 			this.time=Long.parseLong(information[1]);
-			this.signature=information[2];
+			this.signature=SerializationManager.unescape(information[2]);
 			
 			
-		String[] string_array = SerializationManager.makeSubstrings(s, "<Blockchain.PayInformation>", "</Blockchain.PayInformation>", "&");
+		String[] string_array = SerializationManager.makeSubstrings(s, "<Blockchain.PayInformation>", "</Blockchain.PayInformation>", SerializationManager.ARRAY_SEPARATOR);
 		String public_key;
 		double amount;
 		String[] parts_of_transaction;
 		for(String x:string_array)
 		{
-			parts_of_transaction = x.split(SerializationManager.SEPARATOR);
+			parts_of_transaction = SerializationManager.makeSubstrings(s, "#BEGIN", "#END", SerializationManager.SEPARATOR);
 			if(parts_of_transaction.length!=2) throw new Exception("Wrong number of parameters. Couldn't create transaction");
-			public_key=parts_of_transaction[0];
+			public_key=SerializationManager.unescape(parts_of_transaction[0]);
 			amount = Double.parseDouble(parts_of_transaction[1]);
 			addPayee(public_key, amount);
 		}

@@ -50,11 +50,11 @@ public class EntryBuilder extends Entry implements Builder {
 				String[] information=s.split(SerializationManager.SEPARATOR);
 				if(information.length!=5) throw new Exception("Couldn't build Exit");
 					
-					this.IP=information[0];
+					this.IP=SerializationManager.unescape(information[0]);
 					this.hash_rate=Double.parseDouble(information[1]);
-					this.public_key=information[2];
+					this.public_key=SerializationManager.unescape(information[2]);
 					this.time=Long.parseLong(information[3]);
-					this.signature=information[4];
+					this.signature=SerializationManager.unescape(information[4]);
 			}
 
 

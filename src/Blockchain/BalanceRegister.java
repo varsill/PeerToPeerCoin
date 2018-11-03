@@ -151,7 +151,7 @@ public class BalanceRegister extends Register implements XSerializable {
 	public void loadRegisterFromString(String s) throws Exception
 	{
 		balance_list = new Hashtable<String, Double>();
-		String[] string_array =SerializationManager.makeSubstrings(s, ">", "</", "&");
+		String[] string_array =SerializationManager.makeSubstrings(s, ">", "</",SerializationManager.ARRAY_SEPARATOR);
 		
 		for(String x: string_array)
 		{

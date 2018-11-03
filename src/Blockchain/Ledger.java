@@ -306,7 +306,7 @@ public class Ledger implements Configurable {
 				try
 				{
 					BlockBuilder.getInstance(block).isReady();
-					System.out.println(balance_register.getBalanceByAddress(AsymetricCipherManager.getInstance().getPublicKeyAsString()));
+				//	System.out.println(balance_register.getBalanceByAddress(AsymetricCipherManager.getInstance().getPublicKeyAsString()));
 				}catch(Exception e)
 				{
 					DebugManager.alert(e);

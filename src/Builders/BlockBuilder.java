@@ -76,19 +76,19 @@ public class BlockBuilder extends Block implements  Builder {
 			}
 			nonce = Long.parseLong(info[0]);
 			difficulty = Integer.parseInt(info[1]);
-			previous_hash = info[2];
+			previous_hash = SerializationManager.unescape(info[2]);
 			ID = Integer.parseInt(info[3]);
 			time=Long.parseLong(info[4]);
 			Builder builder = null;
 			//Prize 
-			info = SerializationManager.makeSubstrings(s,  "<Blockchain.Prize>", "</Blockchain.Prize>","&");
+			info = SerializationManager.makeSubstrings(s,  "<Blockchain.Prize>", "</Blockchain.Prize>", SerializationManager.ARRAY_SEPARATOR);
 			PrizeBuilder prize_builder = PrizeBuilder.getInstance();
 			prize_builder.loadPartFromString(info[0]);
 			addParcel((Prize)prize_builder.createPart());
 			
 			
 		//Transactions
-			info = SerializationManager.makeSubstrings(s, "<Blockchain.Transaction>", "</Blockchain.Transaction>", "&");
+			info = SerializationManager.makeSubstrings(s, "<Blockchain.Transaction>", "</Blockchain.Transaction>",  SerializationManager.ARRAY_SEPARATOR);
 			
 			
 			
@@ -103,7 +103,7 @@ public class BlockBuilder extends Block implements  Builder {
 			
 			
 		//Entries
-			info =SerializationManager.makeSubstrings(s, "<Blockchain.Entry>", "</Blockchain.Entry>", "&");
+			info =SerializationManager.makeSubstrings(s, "<Blockchain.Entry>", "</Blockchain.Entry>",  SerializationManager.ARRAY_SEPARATOR);
 			
 			for(int i=0; i<info.length; i++)
 			{
@@ -114,7 +114,7 @@ public class BlockBuilder extends Block implements  Builder {
 			}
 			
 		//Exits
-			info = SerializationManager.makeSubstrings(s, "<Blockchain.Exit>", "</Blockchain.Exit>", "&");
+			info = SerializationManager.makeSubstrings(s, "<Blockchain.Exit>", "</Blockchain.Exit>", SerializationManager.ARRAY_SEPARATOR);
 			
 			for(int i=0; i<info.length; i++)
 			{

@@ -12,9 +12,10 @@ import Builders.BlockBuilder;
 
 public class SerializationManager {
 
-	public static String SEPARATOR = ";sep;";
+	public static String SEPARATOR =";";
+	public static String ARRAY_SEPARATOR = "&";
 	
-	
+	public static String[] specials = {SEPARATOR, ARRAY_SEPARATOR, "<"};
 	static public String[] makeSubstrings(String string, String beginning_expression, String end_expression, String splitting_exp)
 	{
 		String proper_string = "";
@@ -38,33 +39,94 @@ public class SerializationManager {
 			proper_string=string.substring(string.indexOf(beginning_expression)+beginning_expression.length(), string.indexOf(end_expression));
 			}
 		
-		
-		if(proper_string.contains("<"))
+		ArrayList<String> array_list =   new ArrayList<String>();
+		if(contains(proper_string, "<"))
 		{
 			
-			ArrayList<String> array_list = new ArrayList<String>();
+		
 			int i=0;
-			while((i=proper_string.indexOf(splitting_exp, proper_string.indexOf("</")))!=-1)
+			while((i=indexOf(proper_string, splitting_exp, indexOf(proper_string, "</")))!=-1)
 			{
 				
 				array_list.add(proper_string.substring(0, i));
-				proper_string=proper_string.substring(i+SEPARATOR.length()) ;
+				proper_string=proper_string.substring(i+splitting_exp.length()) ;
 			}
 			array_list.add(proper_string);
 			
 			
-			String[] array=new String[array_list.size()];
+			String[] result=new String[array_list.size()];
 			
 			for(int j=0; j<array_list.size(); j++)
 			{
-				array[j]=array_list.get(j);
+				result[j]=array_list.get(j);
 			}
-			return array;
+			return result;
 		}
-		else return  proper_string.split(splitting_exp);
+		else
+		{
+		
+			String[] list = proper_string.split(splitting_exp);
+			String additional="";
+			if(list[0].equals(""))array_list.add(splitting_exp+splitting_exp);
+			else array_list.add(list[0]);
+			for(int i=1; i<list.length; i++)
+			{
+				if(list[i].equals(""))
+				{
+					array_list.set(array_list.size()-1, array_list.get(array_list.size()-1)+splitting_exp+splitting_exp);
+				}
+				else
+				{
+					if(array_list.get(array_list.size()-1).endsWith(splitting_exp)) array_list.set(array_list.size()-1, array_list.get(array_list.size()-1)+list[i]);
+					else array_list.add(list[i]);
+				}
+			}
+		}
+		String[] result=new String[array_list.size()];
+		
+		for(int j=0; j<array_list.size(); j++)
+		{
+			result[j]=array_list.get(j);
+		}
+		return result;
 		
 	}
 	
+	static public boolean contains(String s, String c)
+	{
+		for(String x:specials) s=s.replace(x+x, "");
+		return s.contains(c);
+	}
+	
+	
+	static public int indexOf(String s, String c, int i)
+	{
+		for(String x:specials) s= s.replace(x+x, "  ");
+		return s.indexOf(c, i);
+	}
+	
+	static public int indexOf(String s, String c)
+	{
+		return indexOf(s, c, 0);
+	}
+	
+	static public String unescape(String s)
+	{
+		for(String c: specials)
+		{
+			s=s.replace(c,  c+c);
+		}
+		return s;
+	}
+	
+	static private String escape(String s)
+	{
+		for(String c: specials)
+		{
+			s=s.replace(c+c, c);
+		}
+		return s;
+	}
 
 	
 	static public String saveObjectToString(XSerializable x) throws Exception
@@ -100,6 +162,7 @@ public class SerializationManager {
 			if(type.equals(String.class))
 			{
 			String s = 	(String)f.get(x);
+			s=escape(s);
 			result=result.append(s);
 			}
 			else if(type.equals(int.class))
@@ -144,13 +207,13 @@ public class SerializationManager {
 				result.append(type);
 				result.append(closing_type);
 			}
-			result.insert(result.indexOf(closing_type), saveObjectToString(o)+"&");
+			result.insert(result.indexOf(closing_type), saveObjectToString(o)+ARRAY_SEPARATOR);
 			
 		}
 		
 		
 		int index=0;
-		while((index = result.indexOf("&<"))!=-1)
+		while((index = result.indexOf(ARRAY_SEPARATOR+"<"))!=-1)
 		{
 			result.delete(index, index+1);
 		}

@@ -120,7 +120,7 @@ public class ActivePeersRegister extends Register implements XSerializable, Clon
 		
 		this.list_of_peers = new Hashtable<String, Peer>();
 		this.hash_rate=0;
-		String[] string_array = SerializationManager.makeSubstrings(s, ">", "</", "&");
+		String[] string_array = SerializationManager.makeSubstrings(s, ">", "</", SerializationManager.ARRAY_SEPARATOR);
 		
 		for(String x: string_array)
 		{

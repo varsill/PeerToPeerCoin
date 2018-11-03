@@ -10,6 +10,7 @@ import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.SecureRandom;
 import java.security.Signature;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.Scanner;
 
@@ -308,6 +309,7 @@ public class Main {
 	*/	
 		
 		//GETBYTES charset problem!
+	/*
 	
 		Ledger ledger = Ledger.getInstance();
 		EntryBuilder entry_builder = EntryBuilder.getInstance();
@@ -323,10 +325,17 @@ public class Main {
 		ledger.updateNetworkWithBlock(block);
 		
 		ledger.saveNetwork();
-	
+	*/
 		
+		//SerializationManager.indexOf("dupa<</", )
 		
-	
+		/*	
+		String [] array = SerializationManager.makeSubstrings("xdd&lels&&fsd&da&&", "#BEGIN", "#END","&");
+		for(String a:array) System.out.println(a);
+	*/
+		String s = "Messages,Hello\\\\,World,Hobbies,Java\\,Programming";
+		System.out.println(s.indexOf("(?<!\\\\),"));
+		System.out.println(Arrays.toString(s.split("(?<!\\\\),")));
 		}
 	
 	
