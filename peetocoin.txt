@@ -1,0 +1,189 @@
+PeeToCoin Consensus algorithm:
+
+ZMIENNE:
+BLOCKCHAIN;
+REJESTR_HASH_RATE_PEERSOW;
+TABLICA_HASH_RATÓW_POPRZEDNIEGO_BLOKU;
+TABLICA_ZBANOWANYCH;
+STA£E:
+N = 256;
+T = 60*10; //600s <=>10 min 
+M = 25; //Liczba coinow nagrody dla sieci za wykopanie bloku
+MAX_ILE_BLOKÓW_DO_UDOWODNIENIA=15;
+
+WZORY:
+WZÓR_1(PEER): 
+	1.HASH_RATE_SIECI=0;
+	2.Dla ka¿dego Peera (new ITEROWALNY_PEER)z REJESTR_HASH_RATE_PEERSÓW:
+		1. HASH_RATE_SIECI=HASH_RATE_SIECI+REJESTR_HASH_RATE_PEERSÓW[ITEROWALNY_PEER]
+	3. HASH_RATE_PEERA = REJESTR_HASH_RATE_PEERSÓW[PEER]	
+	4. Zwróc HASH_RATE_PEERA/HASH_RATE_SIECI*M;
+
+WZÓR_2(HASH_RATE):
+	1. new ILE_HASHY = HASH_RATE*T
+	2. new WYNIK = CELL(log_2{ILE_HASHY})
+	3. Zwróæ WYNIK
+
+WZÓR_3(HASH_RATE):
+	1.ZnajdŸ najmniejsze, naturalne  S (new S) takie, ¿e 2^S>HASH_RATE
+	2. new X = 1; new MIN_X; new MIN_S;  new MIN_EPS=9999999999999;
+	3. Tak d³ugo jak S>=0 wykonuj:
+		1.S=S-1
+		2. Tak d³ugo jak  X<=MAX_ILE_BLOKÓW_DO_UDOWODNIENIA i X nie jest potêg¹ 2 wykonuj:
+			1. Je¿eli ABS(X*2^S-H)>MIN_EPS to:
+				1.MIN_EPS = ABS(X*2^S-H)
+				2.MIN_S = S
+				3.MIN_X = X
+			2.X=X+1	
+		3. X=X+1;
+	4. Zwróæ MIN_S, MIN_X;
+
+WZÓR_4(PEER): 
+	1.HASH_RATE_SIECI=0;
+	2.Dla ka¿dego Peera (new ITEROWALNY_PEER)z REJESTR_HASH_RATE_PEERSÓW:
+		1. HASH_RATE_SIECI=HASH_RATE_SIECI+REJESTR_HASH_RATE_PEERSÓW[ITEROWALNY_PEER]
+	3. HASH_RATE_PEERA = REJESTR_HASH_RATE_PEERSÓW[PEER]	
+	4. Zwróc HASH_RATE_PEERA/HASH_RATE_SIECI*M
+
+HASH(NONCE):
+	1.Wylicz hash przy u¿yciu SHA-256 z bloku, w którym jako dane podany jest jedynie MERKLE_ROOT
+
+1) Kopanie bloku
+##############################################################################################################################################################################################################################################
+
+ALGORYTM:
+	1. Ustaw kontener na dane (new DANE), które mog¹ byæ typu: transakcje (new TRANSAKCJE), danych o wejœciach (new WEJŒCIA), danych o wyjœciach (new WYJŒCIA)
+	2. Odbieraj dane, które zapisuj do DANE
+	3. Je¿eli liczba odebranych danych przekroczy N to:
+		1. SprawdŸ poprawnoœæ wszystkich danych. Dla ka¿dego nowego elementu zbioru DANE (new DANE[]):
+			1. Zweryfikuj, czy dane zosta³y w rzeczywistoœci podpisane przez osobê, która podaje siê jako nadawca - sprawdŸ podpis cyfrowy.
+			2. SprawdŸ, czy timestamp danych zgadza siê z hashem, który jest w Twoim blockchainie o czasie podanym w timestamp. 
+			3. Je¿eli coœ jest nie tak z punktami 1 i 2 to okreœl DANE[] jako b³êdne, usuñ DANE[] z DANE i wróæ do ^^.2
+			3. Je¿eli(DANE[] jest typu TRANSAKCJE):
+				1. Dla ka¿dego id transakcji podanej jako w DANE[] jako transakcja wejœciowa (new ID_TRANSAKCJI_WEJŒCIOWEJ) wykonaj:
+					1.Wyszukaj ID_TRANSAKCJI_WEJŒCIOWEJ w BLOCKCHAIN i sprawdŸ, czy nie zosta³a ona ju¿ wykorzystana (czy nie ma jej ju¿ podanej jako transakcji wejœciowej)
+					2.Je¿eli transakcja identyfikowana przez ID_TRANSAKCJI_WEJŒCIOWEJ by³a ju¿ wykorzystywana jako transakcja wyjœciowa to okreœl DANE[] jako b³êdne, usuñ DANE[] z DANE i wróæ do ^^^^.2
+			4. Je¿eli(DANE[] jest typu WEJŒCIA):
+				1. Spróbuj po³¹czyæ siê z IP peersa podanym w WEJŒCIA
+				2. Je¿eli nie bêdzie mo¿liwe uzyskanie po³¹czenia:
+					1. Okreœl DANE[] jako b³êdne, usuñ DANE[] z DANE;
+					2. Wróæ do ^^^^.2
+				3. Dodaj Peersa z DANE[] do REJESTR_HASH_RATE_PEERSÓW (jego hash rate pozostaw pusty)
+			5. Je¿eli(DANE[] jest typu WYJŒCIA):
+				1. Usuñ Peersa z DANE[] z REJESTR_HASH_RATE_PEERSÓW
+	3. Zbuduj szkielet nowego bloku (new BLOK)
+		1. Dodaj hash poprzedniego bloku
+		2. Dodaj timestamp bloku
+		3. Dla ka¿dego elementu zbioru DANE(new DANE[]):
+			1. Dodaj DANE[] do BLOK
+		4. Dodaj do bloku informacje o nagrodach za dzia³anie w sieci:
+			1. Dla ka¿dego peera (new PEER), którego hash rate u¿yty w przy kopaniu poprzedniego bloku jest podany w TABLICA_HASH_RATÓW_POPRZEDNIEGO_BLOKU:
+				1. Do danych w BLOK dodaj transakcjê, która wynagrodzi tego peera, zgodnie ze wzorem ----WZOR_1(PEER)----
+			2. Dodaj do bloku transakcjê opiewaj¹c¹ na M coinów, z sob¹ jako adresatem (nagroda za ewentualne wykopanie bloku)
+		5. Okreœl trudnoœæ bloku:
+			1. Pobierz hash rate sieci (new HASH_RATE) z poprzedniego bloku w BLOCKCHAIN.
+			2. Dla ka¿dego wyjœcia (new WYJŒCIA[]) w WYJŒCIA wykonaj:
+				1. Poszukaj peersa, który wyszed³ w REJESTR_HASH_RATE_PEERSÓW
+				2. Je¿eli znaleziono tego peersa to:
+					1. HASH_RATE = HASH_RATE - REJESTR_HASH_RATE_PEERSÓW[WYJŒCIA[]]
+				3. W przeciwnym wypadku:
+					1. Zapytaj s¹siednich peersów o HASH_RATE peersa, który wyszed³.
+			3. Dla ka¿dego wejœcia (new WEJŒCIA[]) w WEJŒCIA wykonaj:
+				1. Poszukaj peersa, który wyszed³ w REJESTR_HASH_RATE_PEERSÓW
+				2. Je¿eli znaleziono tego peersa to:
+					1. HASH_RATE = HASH_RATE + REJESTR_HASH_RATE_PEERSÓW[WYJŒCIA[]]
+				3. W przeciwnym wypadku:
+					1. Zapytaj s¹siednich peersów o HASH_RATE peersa, który wyszed³.
+			4. Oblicz trudnoœæ bloku, znaj¹c HASH_RATE sieci tak, aby czas znalezienia nonce zeruj¹cego hash bloku przy danej trudnoœci wynosi³ T, zgodnie ze ---WZÓR_2(HASH_RATE)---
+		6. U³ó¿ dane w BLOK w merkle tree (new MERKLE_TREE) i ustaw hash korzenia jako merkle root (new MERKLE_ROOT)
+	5. Rozpocznij kopanie bloku:
+		1. Ustaw zmienn¹ nonce (new NONCE) na zero.
+		2. Przygotuj siê do procesu udowadniania swojego hash rate:
+			1. Je¿eli nie znasz swojego hash rate lub nie wiesz jak go udowodniæ to:
+				1. Wykonaj algorytm sprawdzaj¹cy ile hashy na sekunde jesteœ w stanie wykonaæ i zapisz ten wynik jako (new MÓJ_HASH_RATE)
+				2. Ustal, ile nonce zeruj¹cych pierwsze cyfry bloków o ni¿szej trudnoœci (czyli takich, których hash rate zaczyna siê okreœlon¹ liczb¹ zer, mniejsz¹ ni¿ liczba zer potrzebna do globalnego wykopania bloku)
+				potrzeba, aby wykopaæ blok. Skorzystaj ze new(ILE_ZER, ILE_BLOKÓW) = ---WZÓR_3(MÓJ_HASH_RATE)---. Dziêki temu dowiesz siê, ile wynosi ILE_BLOKÓW - czyli ile nonce, które powoduj¹, ¿e hash zaczyna siê liczb¹ ILE_ZER zer musisz
+				znaleŸæ, aby udowodniæ, ¿e Twój hash rate wynosi HASH_RATE.
+			3. Ustaw tablicê noncy (new NONCE_ARRAY), które umo¿liwi¹ Ci udowodnienie swojego HASH_RATE.
+		3. Inkrementuj zmienn¹ NONCE
+			1. Je¿eli hash bloku obliczony zgodnie z wzorem ---H(NONCE)--- bêdzie zaczyna³ siê liczb¹ zer równ¹ ILE_ZER to dodaj ten nonce do NONCE_ARRAY
+			2. Je¿eli hash bloku obliczony zgodnie z wzorem ---H(NONCE)--- bêdzie zaczyna³ siê liczb¹ zer umo¿liwiaj¹c¹ wykopanie bloku, to przerwij inkrementacjê i przejdŸ do ^.6.
+	6. Wyœlij wykopany blok pozosta³ym peersom w sieci. 
+		
+
+2) Po odebraniu wykopanego przez kogoœ innego bloku:
+###################################################################################################################################################################################################################################################
+
+ALGORYTM:	
+	1. Przerwij pracê nad kopaniem swojego bloku.
+	2. Rozpocznij weryfikacjê przes³anego bloku
+		1. Je¿eli nie masz okreœlonej trudnoœci bloku, to:
+			1. Pobierz hash rate sieci (new HASH_RATE) z poprzedniego bloku w BLOCKCHAIN.
+			2. Dla ka¿dego wyjœcia (new WYJŒCIA[]) w WYJŒCIA wykonaj:
+				1. Poszukaj peersa, który wyszed³ w REJESTR_HASH_RATE_PEERSÓW
+				2. Je¿eli znaleziono tego peersa to:
+					1. HASH_RATE = HASH_RATE - REJESTR_HASH_RATE_PEERSÓW[WYJŒCIA[]]
+				3. W przeciwnym wypadku:
+					1. Zapytaj s¹siednich peersów o HASH_RATE peersa, który wyszed³.
+			3. Dla ka¿dego wejœcia (new WEJŒCIA[]) w WEJŒCIA wykonaj:
+				1. Poszukaj peersa, który wyszed³ w REJESTR_HASH_RATE_PEERSÓW
+				2. Je¿eli znaleziono tego peersa to:
+					1. HASH_RATE = HASH_RATE + REJESTR_HASH_RATE_PEERSÓW[WYJŒCIA[]]
+				3. W przeciwnym wypadku:
+					1. Zapytaj s¹siednich peersów o HASH_RATE peersa, który wyszed³.
+			4. Oblicz trudnoœæ bloku, znaj¹c HASH_RATE sieci tak, aby czas znalezienia nonce zeruj¹cego hash bloku przy danej trudnoœci wynosi³ T, zgodnie ze ---WZÓR_2(HASH_RATE)---
+		2. SprawdŸ, czy zadeklarowana w bloku trudnoœæ odpowiada trudnoœci, któr¹ masz wyliczon¹. 
+			1. Je¿eli tak nie jest to odrzuæ blok.
+		3. SprawdŸ czy nonce w bloku zeruje liczbê zer w hashu bloku okreœlon¹ przez trudnoœæ.
+			1. Je¿eli tak nie jest to odrzuæ blok. 
+		4. SprawdŸ poprawnoœæ hsha poprzedniego bloku.
+			1. Je¿eli hash poprzedniego bloku nie zgadza siê z hashem bloku, który w Twoim chainie jest ostatni to odrzuæ blok.
+		5. SprawdŸ poprawnoœæ danych.
+			1.  Dla ka¿dego nowego elementu zbioru DANE (new DANE[]):
+				1. Zweryfikuj, czy dane zosta³y w rzeczywistoœci podpisane przez osobê, która podaje siê jako nadawca - sprawdŸ podpis cyfrowy.
+				2. SprawdŸ, czy timestamp danych zgadza siê z hashem, który jest w Twoim blockchainie o czasie podanym w timestamp. 
+				3. Je¿eli coœ jest nie tak z punktami 1 i 2 to okreœl blok jako b³êdny.
+				4. Je¿eli(DANE[] jest typu TRANSAKCJE):
+					1. Dla ka¿dego id transakcji podanej jako w DANE[] jako transakcja wejœciowa (new ID_TRANSAKCJI_WEJŒCIOWEJ) wykonaj:
+						1.Wyszukaj ID_TRANSAKCJI_WEJŒCIOWEJ w BLOCKCHAIN i sprawdŸ, czy nie zosta³a ona ju¿ wykorzystana (czy nie ma jej ju¿ podanej jako transakcji wejœciowej)
+						2.Je¿eli transakcja identyfikowana przez ID_TRANSAKCJI_WEJŒCIOWEJ by³a ju¿ wykorzystywana jako transakcja wyjœciowa to okreœl blok jako nieprawid³owy.
+					2. Je¿eli DANE[] opisuje transakcjê zwi¹zan¹ z faktem wygenerowania nowego bloku:
+						1. Je¿eli jest to transakcja przypisuj¹ca okreœlonej osobie liczbê coinów za wykopanie bloku to sprawdŸ, czy nagroda wynosi M coinów. Je¿eli nie to odrzuæ blok.
+						2. Je¿eli jest to transakcja przypisuj¹ca peerowi (new PEER) liczbê coinów proporcjonalnie do w³o¿onej mocy obliczeniowej za kopanie poprzedniego bloku to:
+							1.  SprawdŸ czy nagroda zgadza siê z T¹ wyliczon¹ zgodnie z wzorem ---WZÓR_4(PEER)---. Je¿eli nie to odrzuæ blok
+		6. Je¿eli wszystko z blokiem jest w porz¹dku to sprawdŸ zaakceptuj blok poprzez dodanie go do swojego blockchainu.
+		7. Poczekaj jak inni peersi zaakceptuj¹ blok i rozpoczn¹ wysy³anie dowodów swojego hash rate. (new LISTA_DOWODÓW)
+		8. Wyœlij stworzony przez siebie blok (ten, w którym Ty widniejesz jako osoba, której przypad³a nagroda za wykopanie bloku), czêœciowo wykopany, jako dowód swojego hash_rate.
+		9. Rozpocznij weryfikacjê hash rate peerów w sieci, którzy brali udzia³ przy kopaniu tego bloku.
+			1. Wylosuj ILE_PRÓB osób z LISTA_DOWODÓW. 
+			2. Dla ka¿dej wylosowanej osoby (new LISTA_DOWODÓW[]) wykonaj:
+				1. SprawdŸ podpis cyfrowy celem stwierdzenia, czy osoba rzeczywiœcie wys³a³a ten dowód. Je¿eli nie to 
+				2. SprawdŸ, czy osoba ta widnieje w jako beneficjent nagrody za wykopanie bloku.
+				3. SprawdŸ timestamp dowodu i hash poprzedniego bloku. 
+				4. SprawdŸ, na podstawie przes³anych danych, ile bloków i jakiej trudnoœci (new LICZBA_ZER) osoba zadeklarowa³a siê wykopaæ celem udowodnienia tego, ¿e ma dany hash rate.
+				5. new WERYFIKOWANY_HASH_RATE=0
+				6. Dla ka¿dego nonce, które ta osoba przes³a³a (new NONCE) wykonaj:
+					1. Wylicz HASH(NONCE)
+					2. Je¿eli hash wynikowy zaczyna siê okreœlon¹ liczb¹ zer to WERYFIKOWANY_HASH_RATE=WERYFIKOWANY_HASH_RATE+2^(LICZBA_ZER)
+				7. SprawdŸ w REJESTR_HASH_RATE_PEERSÓW jaki hash rate przypisany jest danej osobie i porównaj go z WERYFIKOWANY_HASH_RATE.
+				8. Je¿eli wynik z REJESTRU_HASH_RATE_PEERSÓW ró¿ni siê od wyniku z WERYFIKOWANY_HASH_RATE to:
+					1. Wyœlij informacjê do sieci na temat tego, ¿e zmieni³ siê hash rate danego peera i obecnie wynosi on WERYFIKOWANY_HASH_RATE. 
+					2. Zmieñ wartoœæ hash rate peera w REJESTR_HASH_RATE_PEERÓW
+			3. Odbieraj wszystkie informacje na temat ewentualnych zmian hash ratów w sieci.
+			4. Dla ka¿dej odebranej informacji wykonaj:
+				1.Je¿eli peer, który wys³a³ wiadomoœæ jest w TABLICA_ZBANOWANYCH to zingoruj wiadomoœæ i przejdŸ do ^.4
+				2.SprawdŸ podpis cyfrowy celem stwierdzenia, czy osoba rzeczywiœcie wys³a³a ten dowód. Je¿eli nie to 
+				3. SprawdŸ, czy osoba ta widnieje w jako beneficjent nagrody za wykopanie bloku.
+				4. SprawdŸ timestamp dowodu i hash poprzedniego bloku. 
+				5. SprawdŸ, na podstawie przes³anych danych, ile bloków i jakiej trudnoœci (new LICZBA_ZER) osoba zadeklarowa³a siê wykopaæ celem udowodnienia tego, ¿e ma dany hash rate.
+				6. new WERYFIKOWANY_HASH_RATE=0
+				7. Dla ka¿dego nonce, które ta osoba przes³a³a (new NONCE) wykonaj:
+					1. Wylicz HASH(NONCE)
+					2. Je¿eli hash wynikowy zaczyna siê okreœlon¹ liczb¹ zer to WERYFIKOWANY_HASH_RATE=WERYFIKOWANY_HASH_RATE+2^(LICZBA_ZER)
+				8. SprawdŸ w REJESTR_HASH_RATE_PEERSÓW jaki hash rate przypisany jest danej osobie i porównaj go z WERYFIKOWANY_HASH_RATE.
+				9. Je¿eli wynik z REJESTR_HASH_RATE_PEERSÓW ró¿ni siê od wyniku z WERYFIKOWANY_HASH_RATE to:
+					1. Zmieñ wartoœæ hash rate peera w REJESTR_HASH_RATE_PEERSÓW
+				10. W przeciwnym wypadku, je¿eli wynik siê zgadza to dodaj peera, który przes³a³ tê b³êdn¹ informacjê do TABLICA_ZBANOWANYYCH.  
+		10. TABLICA_HASH_RATÓW_POPRZEDNIEGO_BLOKU=REJESTR_HASH_RATE_PEERSÓW
+
+
