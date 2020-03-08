@@ -9,7 +9,7 @@ import Blockchain.Block;
 import Blockchain.Ledger;
 import Blockchain.XSerializable;
 import Builders.BlockBuilder;
-
+ 
 public class SerializationManager {
 
 	public static String SEPARATOR =";";
