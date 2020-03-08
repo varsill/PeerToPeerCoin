@@ -10,7 +10,7 @@ public class EntryBuilder extends Entry implements Builder {
 			{
 			}
 			
-			private EntryBuilder(Entry e)
+	 		private EntryBuilder(Entry e)
 			{
 				super(e);
 				
