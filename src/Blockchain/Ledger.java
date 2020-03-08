@@ -94,10 +94,7 @@ public class Ledger implements Configurable {
 				}
 			}
 			
-			public void scroll()
-			{
-				//polacz sie z innymi peerami i ogarnij od nich co sie dzialo w sieci podczas twojej nieobecnosci
-			}
+			
 			@Override
 			public void configure()
 			{
