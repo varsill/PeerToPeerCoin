@@ -1,7 +1,7 @@
 package Builders;
 
 import Blockchain.Entry;
-import Blockchain.Exit;
+import Blockchain.Exit; 
 import Managers.SerializationManager;
 
 public class ExitBuilder extends Exit implements Builder {
