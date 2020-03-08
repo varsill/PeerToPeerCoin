@@ -7,6 +7,7 @@ import java.util.Set;
 import Managers.DebugManager;
 import Managers.SerializationManager;
 
+
 public class ActivePeersRegister extends Register implements XSerializable, Cloneable {
 	
 	private Hashtable<String, Peer> list_of_peers=null;
